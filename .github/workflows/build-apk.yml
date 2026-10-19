@@ -23,20 +23,16 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Fix Package, Update Icon & Build Complete App
+      - name: Build Debug APK Native
         run: |
-          # 1. Đổi tên trong pubspec.yaml chuẩn Dart
+          # 1. Đồng bộ tên project trong pubspec.yaml thành gạch dưới chuẩn Dart
           sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
 
-          # 2. Xóa khung android cũ, tạo lại khung v2 và sao chép mã nguồn Dart
+          # 2. Xóa thư mục android cũ và tạo lại khung android v2 trực tiếp
           rm -rf android
-          cd ..
-          flutter create --platforms=android --org=com.example vip_xo_so_app_temp
-          cp -r vip_xo_so_app_temp/android vip-xo-so-app/
-          rm -rf vip_xo_so_app_temp
-          cd vip-xo-so-app
+          flutter create . --platforms=android --org=com.example --project-name=vip_xo_so_app
 
-          # 3. Cập nhật Icon ứng dụng tròn đẹp
+          # 3. Cập nhật Icon ứng dụng mới
           mkdir -p android/app/src/main/res/mipmap-hdpi
           curl -L "https://i.imgur.com/8QG9sWb.png" -o android/app/src/main/res/mipmap-hdpi/ic_launcher.png
           mkdir -p android/app/src/main/res/mipmap-mdpi
@@ -48,20 +44,14 @@ jobs:
           mkdir -p android/app/src/main/res/mipmap-xxxhdpi
           cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
-          # 4. Tạo file local.properties chỉ định đường dẫn Flutter SDK cho Gradle
-          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
-          echo "flutter.sdk=$FLUTTER_ROOT" >> android/local.properties
-
-          # 5. Tải thư viện và biên dịch trọn vẹn APK qua Gradle
+          # 4. Tải dependencies và build APK ở chế độ Debug đầy đủ mã Dart
           flutter pub get
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug
+          flutter build apk --debug --no-tree-shake-icons
 
-      - name: Find & Prepare APK Output
+      - name: Prepare APK Output
         run: |
           mkdir -p build/app/outputs/flutter-apk/
-          find . -name "*.apk" -exec cp {} build/app/outputs/flutter-apk/app-release.apk \;
+          cp build/app/outputs/apk/debug/app-debug.apk build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
