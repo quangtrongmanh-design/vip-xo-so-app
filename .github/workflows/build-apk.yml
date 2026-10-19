@@ -23,95 +23,19 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Fully Upgrade Android Project & Gradle to V2
+      - name: Rebuild Fresh Android V2 Project Structure
         run: |
-          # 1. Xóa thư mục java/kotlin cũ
-          rm -rf android/app/src/main/java
-          rm -rf android/app/src/main/kotlin
+          # 1. Xóa thư mục android cũ để loại bỏ hoàn toàn các cấu hình V1 tàn dư
+          rm -rf android
 
-          # 2. Tạo MainActivity Kotlin chuẩn V2 Embedding
-          PACKAGE_DIR="android/app/src/main/kotlin/com/example/vip_xo_so_mien_nam"
-          mkdir -p "$PACKAGE_DIR"
-          cat << 'EOF' > "$PACKAGE_DIR/MainActivity.kt"
-          package com.example.vip_xo_so_mien_nam
+          # 2. Dùng chính Flutter CLI để tự động khởi tạo lại thư mục android chuẩn V2
+          flutter create . --platforms=android --org=com.example
 
-          import io.flutter.embedding.android.FlutterActivity
-
-          class MainActivity: FlutterActivity() {
-          }
-          EOF
-
-          # 3. Ghi đè AndroidManifest.xml chuẩn V2
-          cat << 'EOF' > android/app/src/main/AndroidManifest.xml
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <application
-                  android:label="VIP Xổ Số Miền Nam"
-                  android:name="${applicationName}"
-                  android:icon="@mipmap/ic_launcher">
-                  <activity
-                      android:name=".MainActivity"
-                      android:exported="true"
-                      android:launchMode="singleTop"
-                      android:theme="@style/LaunchTheme"
-                      android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
-                      android:hardwareAccelerated="true"
-                      android:windowSoftInputMode="adjustResize">
-                      <meta-data
-                        android:name="io.flutter.embedding.android.NormalTheme"
-                        android:resource="@style/NormalTheme"
-                        />
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN"/>
-                          <category android:name="android.intent.category.LAUNCHER"/>
-                      </intent-filter>
-                  </activity>
-                  <meta-data
-                      android:name="flutterEmbedding"
-                      android:value="2" />
-              </application>
-          </manifest>
-          EOF
-
-          # 4. Ghi đè build.gradle chuẩn V2
-          cat << 'EOF' > android/app/build.gradle
-          plugins {
-              id "com.android.application"
-              id "kotlin-android"
-              id "dev.flutter.flutter-gradle-plugin"
-          }
-
-          android {
-              namespace "com.example.vip_xo_so_mien_nam"
-              compileSdk 34
-
-              compileOptions {
-                  sourceCompatibility JavaVersion.VERSION_17
-                  targetCompatibility JavaVersion.VERSION_17
-              }
-
-              kotlinOptions {
-                  jvmTarget = "17"
-              }
-
-              defaultConfig {
-                  applicationId "com.example.vip_xo_so_mien_nam"
-                  minSdk 21
-                  targetSdk 34
-                  versionCode 1
-                  versionName "1.0.0"
-              }
-
-              buildTypes {
-                  release {
-                      signingConfig signingConfigs.debug
-                  }
-              }
-          }
-
-          flutter {
-              source '../..'
-          }
-          EOF
+          # 3. Đảm bảo cấu hình v2 embedding chuẩn trong AndroidManifest.xml
+          MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
+          if [ -f "$MANIFEST_PATH" ]; then
+            sed -i 's/android:label=".*"/android:label="VIP Xổ Số Miền Nam"/g' "$MANIFEST_PATH"
+          fi
 
       - name: Clean & Get Dependencies
         run: |
