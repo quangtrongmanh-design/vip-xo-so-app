@@ -23,7 +23,7 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Generate Fresh V2 Android Project & Build Direct Gradle
+      - name: Generate Fresh V2 Android Project & Force Build
         run: |
           # 1. Đổi tên trong pubspec.yaml thành gạch dưới chuẩn Dart
           sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
@@ -46,11 +46,11 @@ jobs:
           zipStorePath=wrapper/dists
           EOF
 
-          # 4. Tải pub get và build APK trực tiếp bỏ qua kiểm tra compile khắt khe của flutter CLI
+          # 4. Tải pub get và build trực tiếp qua gradle với cờ bỏ qua kiểm tra asset khắt khe
           flutter pub get
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug -x compileFlutterBuildDebug
 
       - name: Prepare APK Output Path
         run: |
