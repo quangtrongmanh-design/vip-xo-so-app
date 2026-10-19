@@ -143,8 +143,15 @@ jobs:
           flutter clean
           flutter pub get
 
-      - name: Build APK Release
-        run: flutter build apk --release --no-tree-shake-icons
+      - name: Build APK Release via Gradle Direct
+        run: |
+          cd android
+          ./gradlew assembleRelease
+
+      - name: Prepare APK Output Path
+        run: |
+          mkdir -p build/app/outputs/flutter-apk/
+          cp android/app/build/outputs/apk/release/app-release.apk build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
