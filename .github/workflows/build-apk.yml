@@ -23,27 +23,18 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Configure Project & Build APK
+      - name: Recreate V2 Android & Build Release APK
         run: |
-          # 1. Đồng bộ tên project trong pubspec.yaml thành gạch dưới chuẩn Dart
+          # 1. Đồng bộ tên project trong pubspec.yaml
           sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
 
-          # 2. Đảm bảo thư mục android tồn tại, nếu chưa có thì tạo mới an toàn
-          if [ ! -d "android" ]; then
-            flutter create . --platforms=android --org=com.example --project-name=vip_xo_so_app
-          fi
+          # 2. XÓA BỎ HOÀN TOÀN KHUNG ANDROID V1 CŨ
+          rm -rf android
 
-          # 3. Cố định Gradle Wrapper bản 8.7 ổn định
-          mkdir -p android/gradle/wrapper
-          cat << 'EOF' > android/gradle/wrapper/gradle-wrapper.properties
-          distributionBase=GRADLE_USER_HOME
-          distributionPath=wrapper/dists
-          distributionUrl=https\://services.gradle.org/distributions/gradle-8.7-bin.zip
-          zipStoreBase=GRADLE_USER_HOME
-          zipStorePath=wrapper/dists
-          EOF
+          # 3. BẮT FLUTTER TẠO MỚI KHUNG ANDROID V2 CHUẨN TẠI CHỖ (GIỮ NGUYÊN MÃ NGUỒN DART)
+          flutter create . --platforms=android --org=com.example --project-name=vip_xo_so_app
 
-          # 4. Cập nhật Icon ứng dụng tròn đẹp vào mọi độ phân giải mipmap
+          # 4. CẬP NHẬT ICON ỨNG DỤNG TRÒN ĐẸP
           mkdir -p android/app/src/main/res/mipmap-hdpi
           curl -L "https://i.imgur.com/8QG9sWb.png" -o android/app/src/main/res/mipmap-hdpi/ic_launcher.png
           mkdir -p android/app/src/main/res/mipmap-mdpi
@@ -55,7 +46,7 @@ jobs:
           mkdir -p android/app/src/main/res/mipmap-xxxhdpi
           cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
-          # 5. Tải dependencies và build file APK hoàn chỉnh
+          # 5. TẢI DEPENDENCIES VÀ BUILD BẢN RELEASE CHUẨN ĐẦY ĐỦ MÃ DART
           flutter pub get
           flutter build apk --release --no-tree-shake-icons
 
