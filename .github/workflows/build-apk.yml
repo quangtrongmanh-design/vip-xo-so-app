@@ -23,20 +23,120 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Fix Package Name & Upgrade Android to V2
+      - name: Fix Package Name & Setup V2 Embedding
         run: |
-          # 1. Tạm thời đổi tên trong pubspec.yaml thành dấu gạch dưới chuẩn Dart
+          # 1. Đổi tên trong pubspec.yaml thành gạch dưới để hợp lệ 100% với Dart
           sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
 
-          # 2. Xóa thư mục android cũ và tạo lại MainActivity v2 sạch sẽ
+          # 2. Xóa cấu hình android cũ và tạo lại thủ công chuẩn v2 embedding sạch sẽ
           rm -rf android
-          flutter create . --platforms=android --org=com.example
+          mkdir -p android/app/src/main/kotlin/com/example/vip_xo_so_app
 
-          # 3. Đảm bảo cấu hình AndroidManifest chuẩn v2 embedding
-          MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
-          if [ -f "$MANIFEST_PATH" ]; then
-            sed -i 's/android:label=".*"/android:label="VIP Xổ Số Miền Nam"/g' "$MANIFEST_PATH"
-          fi
+          # 3. Tạo MainActivity.kt chuẩn v2
+          cat << 'EOF' > android/app/src/main/kotlin/com/example/vip_xo_so_app/MainActivity.kt
+          package com.example.vip_xo_so_app
+
+          import io.flutter.embedding.android.FlutterActivity
+
+          class MainActivity: FlutterActivity() {
+          }
+          EOF
+
+          # 4. Tạo AndroidManifest.xml chuẩn v2 embedding mới hoàn toàn
+          cat << 'EOF' > android/app/src/main/AndroidManifest.xml
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <application
+                  android:label="VIP Xổ Số Miền Nam"
+                  android:name="${applicationName}"
+                  android:icon="@mipmap/ic_launcher">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:launchMode="singleTop"
+                      android:theme="@style/LaunchTheme"
+                      android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+                      android:hardwareAccelerated="true"
+                      android:windowSoftInputMode="adjustResize">
+                      <meta-data
+                        android:name="io.flutter.embedding.android.NormalTheme"
+                        android:resource="@style/NormalTheme"
+                        />
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LAUNCHER"/>
+                      </intent-filter>
+                  </activity>
+                  <meta-data
+                      android:name="flutterEmbedding"
+                      android:value="2" />
+              </application>
+          </manifest>
+          EOF
+
+          # 5. Tạo build.gradle cơ bản cho android app
+          cat << 'EOF' > android/app/build.gradle
+          plugins {
+              id "com.android.application"
+              id "kotlin-android"
+              id "dev.flutter.flutter-gradle-plugin"
+          }
+
+          android {
+              namespace "com.example.vip_xo_so_app"
+              compileSdk 34
+
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_17
+                  targetCompatibility JavaVersion.VERSION_17
+              }
+
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+
+              defaultConfig {
+                  applicationId "com.example.vip_xo_so_app"
+                  minSdk 21
+                  targetSdk 34
+                  versionCode 1
+                  versionName "1.0.0"
+              }
+          }
+
+          flutter {
+              source '../..'
+          }
+          EOF
+
+          # 6. Tạo file settings.gradle cho android
+          cat << 'EOF' > android/settings.gradle
+          pluginManagement {
+              def flutterSdkPath = {
+                  def properties = new Properties()
+                  file("local.properties").withInputStream { reader -> properties.load(reader) }
+                  def flutterSdkPath = properties.getProperty("flutter.sdk")
+                  assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
+                  return flutterSdkPath
+              }()
+
+              includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
+
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+
+          plugins {
+              id "dev.flutter.flutter-plugin-loader" version "1.0.0"
+              id "com.android.application" version "7.3.0" apply false
+              id "org.jetbrains.kotlin.android" version "1.8.22" apply false
+              id "dev.flutter.flutter-gradle-plugin" version "1.0.0" apply false
+          }
+
+          include ":app"
+          EOF
 
       - name: Clean & Get Dependencies
         run: |
