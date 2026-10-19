@@ -25,13 +25,17 @@ jobs:
 
       - name: Setup Valid V2 Android Project
         run: |
-          # 1. Đổi tên trong pubspec.yaml thành gạch dưới chuẩn Dart
+          # 1. Đổi tên thư mục gốc và cập nhật lại pubspec.yaml để tránh hoàn toàn lỗi tên chứa dấu gạch ngang
+          cd ..
+          mv $(ls -d vip-xo-so-app*) vip_xo_so_app
+          cd vip_xo_so_app
+          
           sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
 
           # 2. Xóa sạch thư mục android cũ
           rm -rf android
 
-          # 3. Sử dụng Flutter tạo lại bộ khung Android chuẩn v2 (sẽ tự sinh gradlew đầy đủ)
+          # 3. Sử dụng Flutter tạo lại bộ khung Android chuẩn v2 (tự sinh gradlew đầy đủ)
           flutter create . --platforms=android --org=com.example
 
           # 4. Ghi đè MainActivity chuẩn v2 embedding vào đúng thư mục dự án
@@ -47,17 +51,19 @@ jobs:
 
       - name: Clean & Get Dependencies
         run: |
+          cd ../vip_xo_so_app
           flutter clean
           flutter pub get
 
       - name: Build APK via Gradle Direct
         run: |
-          cd android
+          cd ../vip_xo_so_app/android
           chmod +x gradlew
           ./gradlew assembleRelease
 
       - name: Prepare APK Output Path
         run: |
+          cd ../vip_xo_so_app
           mkdir -p build/app/outputs/flutter-apk/
           cp android/app/build/outputs/apk/release/app-release.apk build/app/outputs/flutter-apk/app-release.apk
 
@@ -65,4 +71,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: ../vip_xo_so_app/build/app/outputs/flutter-apk/app-release.apk
