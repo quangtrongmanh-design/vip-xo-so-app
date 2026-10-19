@@ -23,9 +23,6 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Get dependencies
-        run: flutter pub get
-
       - name: Fully Upgrade Android Project to V2 Embedding
         run: |
           # 1. Xóa sạch thư mục java/kotlin cũ
@@ -44,7 +41,7 @@ jobs:
           }
           EOF
 
-          # 3. Tạo AndroidManifest.xml chuẩn V2 Embedding mới hoàn toàn
+          # 3. Tạo AndroidManifest.xml chuẩn V2 Embedding
           cat << 'EOF' > android/app/src/main/AndroidManifest.xml
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <application
@@ -74,6 +71,11 @@ jobs:
               </application>
           </manifest>
           EOF
+
+      - name: Clean & Get Dependencies
+        run: |
+          flutter clean
+          flutter pub get
 
       - name: Build APK
         run: flutter build apk --release --no-tree-shake-icons
