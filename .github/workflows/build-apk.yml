@@ -23,7 +23,7 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Generate Fresh V2 Android Project & Build Verbose
+      - name: Generate Fresh V2 Android Project & Fix Gradle Wrapper
         run: |
           # 1. Đổi tên trong pubspec.yaml thành gạch dưới chuẩn Dart
           sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
@@ -36,9 +36,19 @@ jobs:
           rm -rf vip_xo_so_app_temp
           cd vip-xo-so-app
 
-          # 3. Tải dependencies và build với cờ verbose để truy vết tận gốc lỗi code Dart
+          # 3. Cố định phiên bản Gradle Wrapper xuống bản ổn định tương thích hoàn hảo
+          mkdir -p android/gradle/wrapper
+          cat << 'EOF' > android/gradle/wrapper/gradle-wrapper.properties
+          distributionBase=GRADLE_USER_HOME
+          distributionPath=wrapper/dists
+          distributionUrl=https\://services.gradle.org/distributions/gradle-8.7-bin.zip
+          zipStoreBase=GRADLE_USER_HOME
+          zipStorePath=wrapper/dists
+          EOF
+
+          # 4. Tải dependencies và tiến hành build APK release
           flutter pub get
-          flutter build apk --release --no-tree-shake-icons --verbose
+          flutter build apk --release --no-tree-shake-icons
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
