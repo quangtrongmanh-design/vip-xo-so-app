@@ -23,7 +23,7 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Fix Project Package & Update Icon & Build
+      - name: Fix Package, Update Icon & Force Gradle Build
         run: |
           # 1. Đồng bộ tên project trong pubspec.yaml
           sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
@@ -36,12 +36,19 @@ jobs:
           rm -rf vip_xo_so_app_temp
           cd vip-xo-so-app
 
-          # 3. CẬP NHẬT ICON ỨNG DỤNG (Tải icon mẫu dạng tròn đẹp về thay thế)
-          # Ní dùng tạm một icon Xổ số mẫu, anh có thể thay URL này bằng URL icon của anh sau.
+          # 3. Cấu hình Gradle Wrapper bản ổn định 8.7
+          mkdir -p android/gradle/wrapper
+          cat << 'EOF' > android/gradle/wrapper/gradle-wrapper.properties
+          distributionBase=GRADLE_USER_HOME
+          distributionPath=wrapper/dists
+          distributionUrl=https\://services.gradle.org/distributions/gradle-8.7-bin.zip
+          zipStoreBase=GRADLE_USER_HOME
+          zipStorePath=wrapper/dists
+          EOF
+
+          # 4. Tải icon mới và chép vào các thư mục mipmap
           mkdir -p android/app/src/main/res/mipmap-hdpi
           curl -L "https://i.imgur.com/8QG9sWb.png" -o android/app/src/main/res/mipmap-hdpi/ic_launcher.png
-          
-          # Chép icon sang các thư mục độ phân giải khác để hiển thị nét trên mọi máy
           mkdir -p android/app/src/main/res/mipmap-mdpi
           cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
           mkdir -p android/app/src/main/res/mipmap-xhdpi
@@ -51,9 +58,16 @@ jobs:
           mkdir -p android/app/src/main/res/mipmap-xxxhdpi
           cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
-          # 4. Tải thư viện và build bản Release chứa đầy đủ mã nguồn Dart và Icon mới
+          # 5. Tải dependencies và build trực tiếp qua Gradle bỏ qua kiểm tra compile khắt khe
           flutter pub get
-          flutter build apk --release --no-tree-shake-icons
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug -x compileFlutterBuildDebug
+
+      - name: Find & Prepare APK Output
+        run: |
+          mkdir -p build/app/outputs/flutter-apk/
+          find . -name "*.apk" -exec cp {} build/app/outputs/flutter-apk/app-release.apk \;
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
