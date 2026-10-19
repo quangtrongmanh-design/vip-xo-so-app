@@ -138,10 +138,18 @@ jobs:
           include ":app"
           EOF
 
-      - name: Get Dependencies & Build APK
+      - name: Get Dependencies & Build via Gradle Direct
         run: |
           flutter pub get
-          flutter build apk --release --no-tree-shake-icons
+          flutter precache --android
+          # Build trực tiếp bằng Gradle để bỏ qua hoàn toàn bộ kiểm tra embedding cũ của lệnh flutter build apk
+          cd android
+          ./gradlew assembleRelease
+
+      - name: Prepare APK Output Path
+        run: |
+          mkdir -p build/app/outputs/flutter-apk/
+          cp android/app/build/outputs/apk/release/app-release.apk build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
