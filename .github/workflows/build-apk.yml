@@ -25,14 +25,24 @@ jobs:
 
       - name: Build Debug APK Native
         run: |
-          # 1. Đồng bộ tên project trong pubspec.yaml thành gạch dưới chuẩn Dart
+          # 1. Đồng bộ tên project trong pubspec.yaml
           sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
 
-          # 2. Xóa thư mục android cũ và tạo lại khung android v2 trực tiếp
+          # 2. Xóa thư mục android cũ và khởi tạo khung android v2 sạch
           rm -rf android
           flutter create . --platforms=android --org=com.example --project-name=vip_xo_so_app
 
-          # 3. Cập nhật Icon ứng dụng mới
+          # 3. Cố định Gradle Wrapper bản 8.7 ổn định
+          mkdir -p android/gradle/wrapper
+          cat << 'EOF' > android/gradle/wrapper/gradle-wrapper.properties
+          distributionBase=GRADLE_USER_HOME
+          distributionPath=wrapper/dists
+          distributionUrl=https\://services.gradle.org/distributions/gradle-8.7-bin.zip
+          zipStoreBase=GRADLE_USER_HOME
+          zipStorePath=wrapper/dists
+          EOF
+
+          # 4. Cập nhật Icon ứng dụng
           mkdir -p android/app/src/main/res/mipmap-hdpi
           curl -L "https://i.imgur.com/8QG9sWb.png" -o android/app/src/main/res/mipmap-hdpi/ic_launcher.png
           mkdir -p android/app/src/main/res/mipmap-mdpi
@@ -44,9 +54,9 @@ jobs:
           mkdir -p android/app/src/main/res/mipmap-xxxhdpi
           cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
-          # 4. Tải dependencies và build APK ở chế độ Debug đầy đủ mã Dart
+          # 5. Build APK Debug đầy đủ mã Dart và giao diện
           flutter pub get
-          flutter build apk --debug --no-tree-shake-icons
+          flutter build apk --debug
 
       - name: Prepare APK Output
         run: |
