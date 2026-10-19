@@ -23,7 +23,7 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Fix Package, Update Icon & Force Gradle Build
+      - name: Fix Package, Update Icon & Build Full Debug APK
         run: |
           # 1. Đồng bộ tên project trong pubspec.yaml
           sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
@@ -36,17 +36,7 @@ jobs:
           rm -rf vip_xo_so_app_temp
           cd vip-xo-so-app
 
-          # 3. Cấu hình Gradle Wrapper bản ổn định 8.7
-          mkdir -p android/gradle/wrapper
-          cat << 'EOF' > android/gradle/wrapper/gradle-wrapper.properties
-          distributionBase=GRADLE_USER_HOME
-          distributionPath=wrapper/dists
-          distributionUrl=https\://services.gradle.org/distributions/gradle-8.7-bin.zip
-          zipStoreBase=GRADLE_USER_HOME
-          zipStorePath=wrapper/dists
-          EOF
-
-          # 4. Tải icon mới và chép vào các thư mục mipmap
+          # 3. Tải icon mới và chép vào các thư mục mipmap
           mkdir -p android/app/src/main/res/mipmap-hdpi
           curl -L "https://i.imgur.com/8QG9sWb.png" -o android/app/src/main/res/mipmap-hdpi/ic_launcher.png
           mkdir -p android/app/src/main/res/mipmap-mdpi
@@ -58,19 +48,12 @@ jobs:
           mkdir -p android/app/src/main/res/mipmap-xxxhdpi
           cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
-          # 5. Tải dependencies và build trực tiếp qua Gradle bỏ qua kiểm tra compile khắt khe
+          # 4. Tải pub get và build APK dạng Debug (chứa đầy đủ mã Dart và giao diện)
           flutter pub get
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug -x compileFlutterBuildDebug
-
-      - name: Find & Prepare APK Output
-        run: |
-          mkdir -p build/app/outputs/flutter-apk/
-          find . -name "*.apk" -exec cp {} build/app/outputs/flutter-apk/app-release.apk \;
+          flutter build apk --debug --no-tree-shake-icons
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
