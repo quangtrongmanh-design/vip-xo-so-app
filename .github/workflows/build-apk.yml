@@ -26,24 +26,15 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Force Upgrade to Android v2 Embedding
+      - name: Fully Upgrade Android Project to V2 Embedding
         run: |
-          # 1. Cập nhật AndroidManifest.xml
-          MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
-          if [ -f "$MANIFEST_PATH" ]; then
-            sed -i 's/android:name="io.flutter.app.FlutterApplication"/android:name="${applicationName}"/g' "$MANIFEST_PATH"
-            if ! grep -q "flutterEmbedding" "$MANIFEST_PATH"; then
-              sed -i '/<application/a \ \ \ \ <meta-data\n\ \ \ \ \ \ \ \ android:name="flutterEmbedding"\n\ \ \ \ \ \ \ \ android:value="2" \/>' "$MANIFEST_PATH"
-            fi
-          fi
-
-          # 2. Xóa các file MainActivity cũ và ghi đè MainActivity Kotlin chuẩn V2
+          # 1. Xóa sạch thư mục java/kotlin cũ
           rm -rf android/app/src/main/java
           rm -rf android/app/src/main/kotlin
-          
+
+          # 2. Tạo MainActivity Kotlin chuẩn V2 Embedding
           PACKAGE_DIR="android/app/src/main/kotlin/com/example/vip_xo_so_mien_nam"
           mkdir -p "$PACKAGE_DIR"
-          
           cat << 'EOF' > "$PACKAGE_DIR/MainActivity.kt"
           package com.example.vip_xo_so_mien_nam
 
@@ -51,6 +42,37 @@ jobs:
 
           class MainActivity: FlutterActivity() {
           }
+          EOF
+
+          # 3. Tạo AndroidManifest.xml chuẩn V2 Embedding mới hoàn toàn
+          cat << 'EOF' > android/app/src/main/AndroidManifest.xml
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <application
+                  android:label="VIP Xổ Số Miền Nam"
+                  android:name="${applicationName}"
+                  android:icon="@mipmap/ic_launcher">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:launchMode="singleTop"
+                      android:theme="@style/LaunchTheme"
+                      android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+                      android:hardwareAccelerated="true"
+                      android:windowSoftInputMode="adjustResize">
+                      <meta-data
+                        android:name="io.flutter.embedding.android.NormalTheme"
+                        android:resource="@style/NormalTheme"
+                        />
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LAUNCHER"/>
+                      </intent-filter>
+                  </activity>
+                  <meta-data
+                      android:name="flutterEmbedding"
+                      android:value="2" />
+              </application>
+          </manifest>
           EOF
 
       - name: Build APK
