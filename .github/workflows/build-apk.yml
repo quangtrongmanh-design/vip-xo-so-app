@@ -46,16 +46,17 @@ jobs:
           zipStorePath=wrapper/dists
           EOF
 
-          # 4. Tải pub get và build trực tiếp qua gradle với cờ bỏ qua kiểm tra asset khắt khe
+          # 4. Tải pub get và build trực tiếp qua gradle
           flutter pub get
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug -x compileFlutterBuildDebug
 
-      - name: Prepare APK Output Path
+      - name: Find & Prepare APK Output
         run: |
           mkdir -p build/app/outputs/flutter-apk/
-          cp android/app/build/outputs/apk/debug/app-debug.apk build/app/outputs/flutter-apk/app-release.apk
+          # Tự động tìm file .apk trong thư mục android/app/build và chép sang
+          find android/app/build -name "*.apk" -exec cp {} build/app/outputs/flutter-apk/app-release.apk \;
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
