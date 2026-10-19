@@ -23,8 +23,10 @@ jobs:
           flutter-version: '3.19.6'
           channel: 'stable'
 
-      - name: Get dependencies
-        run: flutter pub get
+      - name: Fix dependencies
+        run: |
+          flutter pub add shared_preferences:^2.2.3
+          flutter pub get
 
       - name: Build APK
         run: flutter build apk --release --no-tree-shake-icons
