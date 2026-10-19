@@ -23,9 +23,9 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Fully Upgrade Android Project to V2 Embedding
+      - name: Fully Upgrade Android Project & Gradle to V2
         run: |
-          # 1. Xóa sạch thư mục java/kotlin cũ
+          # 1. Xóa thư mục java/kotlin cũ
           rm -rf android/app/src/main/java
           rm -rf android/app/src/main/kotlin
 
@@ -41,7 +41,7 @@ jobs:
           }
           EOF
 
-          # 3. Tạo AndroidManifest.xml chuẩn V2 Embedding
+          # 3. Ghi đè AndroidManifest.xml chuẩn V2
           cat << 'EOF' > android/app/src/main/AndroidManifest.xml
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <application
@@ -70,6 +70,47 @@ jobs:
                       android:value="2" />
               </application>
           </manifest>
+          EOF
+
+          # 4. Ghi đè build.gradle chuẩn V2
+          cat << 'EOF' > android/app/build.gradle
+          plugins {
+              id "com.android.application"
+              id "kotlin-android"
+              id "dev.flutter.flutter-gradle-plugin"
+          }
+
+          android {
+              namespace "com.example.vip_xo_so_mien_nam"
+              compileSdk 34
+
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_17
+                  targetCompatibility JavaVersion.VERSION_17
+              }
+
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+
+              defaultConfig {
+                  applicationId "com.example.vip_xo_so_mien_nam"
+                  minSdk 21
+                  targetSdk 34
+                  versionCode 1
+                  versionName "1.0.0"
+              }
+
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.debug
+                  }
+              }
+          }
+
+          flutter {
+              source '../..'
+          }
           EOF
 
       - name: Clean & Get Dependencies
