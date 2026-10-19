@@ -23,12 +23,12 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Generate Fresh V2 Android Project & Force Build
+      - name: Fix Project Package & Build Full Release APK
         run: |
-          # 1. Đổi tên trong pubspec.yaml thành gạch dưới chuẩn Dart
+          # 1. Đồng bộ tên project trong pubspec.yaml
           sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
 
-          # 2. Xóa thư mục android cũ và tạo lại bộ khung v2 sạch sẽ
+          # 2. Tạo khung Android v2 sạch sẽ
           rm -rf android
           cd ..
           flutter create --platforms=android --org=com.example vip_xo_so_app_temp
@@ -36,27 +36,9 @@ jobs:
           rm -rf vip_xo_so_app_temp
           cd vip-xo-so-app
 
-          # 3. Cấu hình Gradle Wrapper bản ổn định 8.7
-          mkdir -p android/gradle/wrapper
-          cat << 'EOF' > android/gradle/wrapper/gradle-wrapper.properties
-          distributionBase=GRADLE_USER_HOME
-          distributionPath=wrapper/dists
-          distributionUrl=https\://services.gradle.org/distributions/gradle-8.7-bin.zip
-          zipStoreBase=GRADLE_USER_HOME
-          zipStorePath=wrapper/dists
-          EOF
-
-          # 4. Tải pub get và build trực tiếp qua gradle
+          # 3. Lấy thư viện và build bản Release chứa đầy đủ mã nguồn Dart
           flutter pub get
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug -x compileFlutterBuildDebug
-
-      - name: Find & Prepare APK Output
-        run: |
-          mkdir -p build/app/outputs/flutter-apk/
-          # Tìm file apk bất kỳ trong thư mục dự án và chép ra đúng chuẩn artifact
-          find . -name "*.apk" -exec cp {} build/app/outputs/flutter-apk/app-release.apk \;
+          flutter build apk --release --no-tree-shake-icons
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
