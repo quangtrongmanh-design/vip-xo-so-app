@@ -23,7 +23,7 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Generate Fresh V2 Android Project & Build Standard
+      - name: Generate Fresh V2 Android Project & Build Verbose
         run: |
           # 1. Đổi tên trong pubspec.yaml thành gạch dưới chuẩn Dart
           sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
@@ -36,13 +36,9 @@ jobs:
           rm -rf vip_xo_so_app_temp
           cd vip-xo-so-app
 
-          # 3. Thêm cấu hình bỏ qua kiểm tra embedding ngặt nghèo trong gradle.properties
-          echo "android.useAndroidX=true" >> android/gradle.properties
-          echo "android.enableJetifier=true" >> android/gradle.properties
-
-          # 4. Tải dependencies và tiến hành build APK release chuẩn
+          # 3. Tải dependencies và build với cờ verbose để truy vết tận gốc lỗi code Dart
           flutter pub get
-          flutter build apk --release --no-tree-shake-icons
+          flutter build apk --release --no-tree-shake-icons --verbose
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
