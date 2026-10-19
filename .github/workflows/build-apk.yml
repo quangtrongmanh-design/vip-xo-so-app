@@ -41,7 +41,7 @@ jobs:
           }
           EOF
 
-          # 3. Tạo AndroidManifest.xml chuẩn V2 Embedding mới hoàn toàn
+          # 3. Tạo AndroidManifest.xml chuẩn V2 Embedding mới hoàn toàn, loại bỏ hoàn toàn FlutterApplication cũ
           cat << 'EOF' > android/app/src/main/AndroidManifest.xml
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <application
