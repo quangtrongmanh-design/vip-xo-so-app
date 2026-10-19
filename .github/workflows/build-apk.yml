@@ -26,6 +26,22 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      - name: Auto Fix Android v1 to v2 Embedding
+        run: |
+          # 1. Cập nhật AndroidManifest.xml sang v2 embedding
+          MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
+          if [ -f "$MANIFEST_PATH" ]; then
+            sed -i 's/android:name="io.flutter.app.FlutterApplication"/android:name="${applicationName}"/g' "$MANIFEST_PATH"
+            if ! grep -q "flutterEmbedding" "$MANIFEST_PATH"; then
+              sed -i '/<application/a \ \ \ \ <meta-data\n\ \ \ \ \ \ \ \ android:name="flutterEmbedding"\n\ \ \ \ \ \ \ \ android:value="2" \/>' "$MANIFEST_PATH"
+            fi
+          fi
+          
+          # 2. Cập nhật import MainActivity sang v2
+          find android/app/src/main/java -name "MainActivity.java" -o -name "MainActivity.kt" | while read file; do
+            sed -i 's/io.flutter.app.FlutterActivity/io.flutter.embedding.android.FlutterActivity/g' "$file"
+          done
+
       - name: Build APK
         run: flutter build apk --release --no-tree-shake-icons --no-pub
 
