@@ -23,7 +23,7 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Fix Project Package & Build Full Release APK
+      - name: Fix Project Package & Update Icon & Build
         run: |
           # 1. Đồng bộ tên project trong pubspec.yaml
           sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
@@ -36,7 +36,22 @@ jobs:
           rm -rf vip_xo_so_app_temp
           cd vip-xo-so-app
 
-          # 3. Lấy thư viện và build bản Release chứa đầy đủ mã nguồn Dart
+          # 3. CẬP NHẬT ICON ỨNG DỤNG (Tải icon mẫu dạng tròn đẹp về thay thế)
+          # Ní dùng tạm một icon Xổ số mẫu, anh có thể thay URL này bằng URL icon của anh sau.
+          mkdir -p android/app/src/main/res/mipmap-hdpi
+          curl -L "https://i.imgur.com/8QG9sWb.png" -o android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+          
+          # Chép icon sang các thư mục độ phân giải khác để hiển thị nét trên mọi máy
+          mkdir -p android/app/src/main/res/mipmap-mdpi
+          cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+          mkdir -p android/app/src/main/res/mipmap-xhdpi
+          cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          mkdir -p android/app/src/main/res/mipmap-xxhdpi
+          cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+          cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+
+          # 4. Tải thư viện và build bản Release chứa đầy đủ mã nguồn Dart và Icon mới
           flutter pub get
           flutter build apk --release --no-tree-shake-icons
 
