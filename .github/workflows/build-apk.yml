@@ -23,12 +23,12 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Fix Package, Update Icon & Build Full Debug APK
+      - name: Fix Package, Update Icon & Build Complete App
         run: |
-          # 1. Đồng bộ tên project trong pubspec.yaml
+          # 1. Đổi tên trong pubspec.yaml chuẩn Dart
           sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
 
-          # 2. Tạo khung Android v2 sạch sẽ
+          # 2. Xóa khung android cũ, tạo lại khung v2 và sao chép mã nguồn Dart
           rm -rf android
           cd ..
           flutter create --platforms=android --org=com.example vip_xo_so_app_temp
@@ -36,7 +36,7 @@ jobs:
           rm -rf vip_xo_so_app_temp
           cd vip-xo-so-app
 
-          # 3. Tải icon mới và chép vào các thư mục mipmap
+          # 3. Cập nhật Icon ứng dụng tròn đẹp
           mkdir -p android/app/src/main/res/mipmap-hdpi
           curl -L "https://i.imgur.com/8QG9sWb.png" -o android/app/src/main/res/mipmap-hdpi/ic_launcher.png
           mkdir -p android/app/src/main/res/mipmap-mdpi
@@ -48,12 +48,23 @@ jobs:
           mkdir -p android/app/src/main/res/mipmap-xxxhdpi
           cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
-          # 4. Tải pub get và build APK dạng Debug (chứa đầy đủ mã Dart và giao diện)
+          # 4. Tạo file local.properties chỉ định đường dẫn Flutter SDK cho Gradle
+          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+          echo "flutter.sdk=$FLUTTER_ROOT" >> android/local.properties
+
+          # 5. Tải thư viện và biên dịch trọn vẹn APK qua Gradle
           flutter pub get
-          flutter build apk --debug --no-tree-shake-icons
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Find & Prepare APK Output
+        run: |
+          mkdir -p build/app/outputs/flutter-apk/
+          find . -name "*.apk" -exec cp {} build/app/outputs/flutter-apk/app-release.apk \;
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
