@@ -26,9 +26,9 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Auto Fix Android v1 to v2 Embedding
+      - name: Force Upgrade to Android v2 Embedding
         run: |
-          # 1. Cập nhật AndroidManifest.xml sang v2 embedding
+          # 1. Cập nhật AndroidManifest.xml
           MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
           if [ -f "$MANIFEST_PATH" ]; then
             sed -i 's/android:name="io.flutter.app.FlutterApplication"/android:name="${applicationName}"/g' "$MANIFEST_PATH"
@@ -36,14 +36,25 @@ jobs:
               sed -i '/<application/a \ \ \ \ <meta-data\n\ \ \ \ \ \ \ \ android:name="flutterEmbedding"\n\ \ \ \ \ \ \ \ android:value="2" \/>' "$MANIFEST_PATH"
             fi
           fi
+
+          # 2. Xóa các file MainActivity cũ và ghi đè MainActivity Kotlin chuẩn V2
+          rm -rf android/app/src/main/java
+          rm -rf android/app/src/main/kotlin
           
-          # 2. Cập nhật import MainActivity sang v2
-          find android/app/src/main/java -name "MainActivity.java" -o -name "MainActivity.kt" | while read file; do
-            sed -i 's/io.flutter.app.FlutterActivity/io.flutter.embedding.android.FlutterActivity/g' "$file"
-          done
+          PACKAGE_DIR="android/app/src/main/kotlin/com/example/vip_xo_so_mien_nam"
+          mkdir -p "$PACKAGE_DIR"
+          
+          cat << 'EOF' > "$PACKAGE_DIR/MainActivity.kt"
+          package com.example.vip_xo_so_mien_nam
+
+          import io.flutter.embedding.android.FlutterActivity
+
+          class MainActivity: FlutterActivity() {
+          }
+          EOF
 
       - name: Build APK
-        run: flutter build apk --release --no-tree-shake-icons --no-pub
+        run: flutter build apk --release --no-tree-shake-icons
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
