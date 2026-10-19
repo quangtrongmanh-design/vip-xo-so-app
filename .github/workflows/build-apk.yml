@@ -23,14 +23,21 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Clean Old Android & Get Dependencies
+      - name: Regenerate Supported V2 Android Project
         run: |
-          # Xóa sạch thư mục android cũ để Flutter tự tạo mới hoàn toàn chuẩn V2 Embedding khi build
-          rm -rf android
-          flutter pub get
+          # 1. Tạm sửa tên trong pubspec.yaml thành gạch dưới để flutter create không bị bắt bẻ tên repo
+          sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
 
-      - name: Build APK Release
+          # 2. Xóa sạch thư mục android cũ
+          rm -rf android
+
+          # 3. Sử dụng Flutter tự sinh toàn bộ cấu trúc Android chuẩn tương thích hoàn toàn với Flutter 3.22.x
+          flutter create . --platforms=android --org=com.example
+
+      - name: Clean & Build APK Release
         run: |
+          flutter clean
+          flutter pub get
           flutter build apk --release --no-tree-shake-icons
 
       - name: Upload APK Artifact
