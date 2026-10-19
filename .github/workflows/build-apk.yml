@@ -23,13 +23,20 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Regenerate Clean Android Project
+      - name: Fix Package Name & Upgrade Android to V2
         run: |
-          # Xóa hoàn toàn thư mục android cũ bị lỗi tàn dư v1
+          # 1. Tạm thời đổi tên trong pubspec.yaml thành dấu gạch dưới chuẩn Dart
+          sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
+
+          # 2. Xóa thư mục android cũ và tạo lại MainActivity v2 sạch sẽ
           rm -rf android
-          
-          # Khởi tạo lại thư mục android hoàn toàn mới, chuẩn v2 embedding từ Flutter SDK
           flutter create . --platforms=android --org=com.example
+
+          # 3. Đảm bảo cấu hình AndroidManifest chuẩn v2 embedding
+          MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
+          if [ -f "$MANIFEST_PATH" ]; then
+            sed -i 's/android:label=".*"/android:label="VIP Xổ Số Miền Nam"/g' "$MANIFEST_PATH"
+          fi
 
       - name: Clean & Get Dependencies
         run: |
