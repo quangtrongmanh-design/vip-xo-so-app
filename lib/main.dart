@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 const String dataBaseUrl = 'https://raw.githubusercontent.com/quangtrongmanh-design/vip-xo-so-data/main/data';
 const Color brandRed = Color(0xFFC62828);
@@ -170,7 +169,7 @@ class _HomePageState extends State<HomePage> {
         }
       });
     }
-    setState(() => ticketResult = matches.isEmpty ? 'Chưa trúng thưởng số $ticket trên đài ${selectedFilterProvince}.' : '🎉 Chúc mừng! Có ${matches.length} kết quả trúng:\n${matches.join('\n')}');
+    setState(() => ticketResult = matches.isEmpty ? 'Chưa trúng thưởng số $ticket trên đài $selectedFilterProvince.' : '🎉 Chúc mừng! Có ${matches.length} kết quả trúng:\n${matches.join('\n')}');
   }
 
   @override Widget build(BuildContext context) {
@@ -262,39 +261,42 @@ class _HomePageState extends State<HomePage> {
     ),
   );
 
-  Widget drawCard(LotteryDraw draw) => Card(
-    margin: const EdgeInsets.only(bottom: 14),
-    clipBehavior: Clip.antiAlias,
-    elevation: 2,
-    child: Column(children: [
-      Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        color: brandRed,
-        child: Row(children: [
-          const Icon(Icons.location_on, color: Colors.white, size: 18),
-          const SizedBox(width: 7),
-          Expanded(child: Text(draw.province.toUpperCase(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15))),
-          Text(DateFormat('dd/MM/yyyy').format(DateTime.tryParse(draw.date) ?? selectedDate), style: const TextStyle(color: Colors.white87, fontSize: 12)),
-        ]),
-      ),
-      ..._prizeOrder.where((p) => draw.prizes.containsKey(p)).map((p) {
-        final vals = draw.numbers(draw.prizes[p]);
-        final isSpecial = p == 'specialPrize';
-        return Container(
-          color: isSpecial ? const Color(0xFFFFF1F1) : Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(width: 65, child: Text(_prizeName(p), style: TextStyle(fontSize: 12, color: isSpecial ? brandRed : Colors.black87, fontWeight: isSpecial ? FontWeight.bold : FontWeight.w600))),
-              Expanded(child: Wrap(spacing: 12, runSpacing: 6, children: vals.map((n) => Text(n, style: TextStyle(fontSize: isSpecial ? 22 : 16, fontWeight: isSpecial ? FontWeight.w900 : FontWeight.w700, color: isSpecial ? brandRed : ink, fontFeatures: const [FontFeature.tabularFigures()]))).toList())),
-            ],
-          ),
-        );
-      }),
-    ]),
-  );
+  Widget drawCard(LotteryDraw draw) {
+    final drawDt = DateTime.tryParse(draw.date) ?? selectedDate;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 14),
+      clipBehavior: Clip.antiAlias,
+      elevation: 2,
+      child: Column(children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          color: brandRed,
+          child: Row(children: [
+            const Icon(Icons.location_on, color: Colors.white, size: 18),
+            const SizedBox(width: 7),
+            Expanded(child: Text(draw.province.toUpperCase(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15))),
+            Text(DateFormat('dd/MM/yyyy').format(drawDt), style: const TextStyle(color: Colors.white87, fontSize: 12)),
+          ]),
+        ),
+        ..._prizeOrder.where((p) => draw.prizes.containsKey(p)).map((p) {
+          final vals = draw.numbers(draw.prizes[p]);
+          final isSpecial = p == 'specialPrize';
+          return Container(
+            color: isSpecial ? const Color(0xFFFFF1F1) : Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(width: 65, child: Text(_prizeName(p), style: TextStyle(fontSize: 12, color: isSpecial ? brandRed : Colors.black87, fontWeight: isSpecial ? FontWeight.bold : FontWeight.w600))),
+                Expanded(child: Wrap(spacing: 12, runSpacing: 6, children: vals.map((n) => Text(n, style: TextStyle(fontSize: isSpecial ? 22 : 16, fontWeight: isSpecial ? FontWeight.w900 : FontWeight.w700, color: isSpecial ? brandRed : ink, fontFeatures: const [FontFeature.tabularFigures()]))).toList())),
+              ],
+            ),
+          );
+        }),
+      ]),
+    );
+  }
 
   Widget historyPage() => ListView(
     padding: const EdgeInsets.all(16),
