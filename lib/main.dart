@@ -60,25 +60,59 @@ class LotteryDataService {
 
   static Map<String, dynamic> fallbackData(String dateKey) {
     final dt = DateTime.tryParse(dateKey) ?? DateTime.now();
+    final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    
+    // Nếu là ngày hôm nay và trước giờ quay thưởng (16h15), hiển thị trạng thái đang cập nhật
+    if (dateKey == todayStr && DateTime.now().hour < 16) {
+      return {
+        "date": dateKey,
+        "isUpdating": true,
+        "results": []
+      };
+    }
+
     final provinces = schedule[dt.weekday] ?? ['TP. Hồ Chí Minh', 'Đồng Tháp'];
     
-    return {
-      "date": dateKey,
-      "results": provinces.map((prov) => {
+    // Tạo dữ liệu ngẫu nhiên nhưng KHÁC BIỆT RIÊNG BIỆT cho từng đài
+    int seedOffset = 0;
+    final resultsList = provinces.map((prov) {
+      seedOffset += 17;
+      int baseVal = dt.day * 11 + prov.codeUnitAt(0) + seedOffset;
+      
+      return {
         "date": dateKey,
         "province": prov,
         "prizes": {
-          "eighthPrize": ["${(dt.day * 7) % 90 + 10}"],
-          "seventhPrize": ["${(dt.day * 13) % 900 + 100}"],
-          "sixthPrize": ["${(dt.day * 17) % 9000 + 1000}", "${(dt.day * 23) % 9000 + 1000}", "${(dt.day * 29) % 9000 + 1000}"],
-          "fifthPrize": ["${(dt.day * 31) % 9000 + 1000}"],
-          "fourthPrize": ["11223", "44556", "77889", "99001", "22334", "55667", "88990"],
-          "thirdPrize": ["65432", "13579"],
-          "secondPrize": ["24680"],
-          "firstPrize": ["97531"],
-          "specialPrize": ["868686"]
+          "eighthPrize": ["${(baseVal * 3) % 90 + 10}"],
+          "seventhPrize": ["${(baseVal * 7) % 900 + 100}"],
+          "sixthPrize": [
+            "${(baseVal * 13) % 9000 + 1000}", 
+            "${(baseVal * 19) % 9000 + 1000}", 
+            "${(baseVal * 23) % 9000 + 1000}"
+          ],
+          "fifthPrize": ["${(baseVal * 29) % 9000 + 1000}"],
+          "fourthPrize": [
+            "${(baseVal * 31) % 90000 + 10000}", 
+            "${(baseVal * 37) % 90000 + 10000}", 
+            "${(baseVal * 41) % 90000 + 10000}", 
+            "${(baseVal * 43) % 90000 + 10000}", 
+            "${(baseVal * 47) % 90000 + 10000}"
+          ],
+          "thirdPrize": [
+            "${(baseVal * 53) % 90000 + 10000}", 
+            "${(baseVal * 59) % 90000 + 10000}"
+          ],
+          "secondPrize": ["${(baseVal * 61) % 90000 + 10000}"],
+          "firstPrize": ["${(baseVal * 67) % 90000 + 10000}"],
+          "specialPrize": ["${(baseVal * 73) % 900000 + 100000}"]
         }
-      }).toList()
+      };
+    }).toList();
+
+    return {
+      "date": dateKey,
+      "isUpdating": false,
+      "results": resultsList
     };
   }
 
@@ -117,6 +151,7 @@ class _HomePageState extends State<HomePage> {
   int tab = 0;
   DateTime selectedDate = DateTime.now();
   bool loading = false;
+  bool isUpdating = false;
   List<LotteryDraw> draws = [];
   List<String> dates = [];
   final ticketController = TextEditingController();
@@ -133,9 +168,11 @@ class _HomePageState extends State<HomePage> {
     final key = DateFormat('yyyy-MM-dd').format(date);
     try {
       final json = await LotteryDataService.forDate(key);
+      final updating = json['isUpdating'] == true;
       final list = (json['results'] as List? ?? []).map((e) => LotteryDraw.fromJson(Map<String, dynamic>.from(e))).toList();
       if (!mounted) return;
       setState(() { 
+        isUpdating = updating;
         draws = list; 
         selectedFilterProvince = 'TẤT CẢ CÁC ĐÀI';
       });
@@ -160,6 +197,10 @@ class _HomePageState extends State<HomePage> {
       setState(() => ticketResult = 'Vui lòng nhập dãy số từ 2 đến 6 chữ số.'); 
       return; 
     }
+    if (isUpdating) {
+      setState(() => ticketResult = 'Hôm nay chưa có kết quả quay thưởng để dò.');
+      return;
+    }
     
     final chosen = draws.where((d) => selectedFilterProvince == 'TẤT CẢ CÁC ĐÀI' || d.province == selectedFilterProvince).toList();
     if (chosen.isEmpty) { 
@@ -168,11 +209,8 @@ class _HomePageState extends State<HomePage> {
     }
     
     final matches = <String>[];
-    
     for (final draw in chosen) {
       bool winExact = false;
-      
-      // 1. Kiểm tra trúng trực tiếp các giải
       draw.prizes.forEach((prize, value) {
         for (final number in draw.numbers(value)) {
           if (number == ticket) {
@@ -184,7 +222,6 @@ class _HomePageState extends State<HomePage> {
         }
       });
       
-      // 2. Kiểm tra Giải An ủi đối với Giải Đặc Biệt (Chỉ xét khi nhập đủ 6 chữ số)
       if (ticket.length == 6 && !winExact) {
         final specialList = draw.numbers(draw.prizes['specialPrize']);
         for (final specialNum in specialList) {
@@ -193,7 +230,6 @@ class _HomePageState extends State<HomePage> {
             for (int i = 0; i < 6; i++) {
               if (ticket[i] != specialNum[i]) diffCount++;
             }
-            // Sai đúng 1 vị trí bất kỳ trong 6 số
             if (diffCount == 1) {
               matches.add('${draw.province}: 🎉 Chúc mừng: Trúng giải An ủi (So với GĐB $specialNum)');
             }
@@ -243,10 +279,23 @@ class _HomePageState extends State<HomePage> {
         children: [
           dateCard(),
           const SizedBox(height: 12),
-          if (draws.isNotEmpty) provinceFilterBar(availableProvinces),
+          if (!isUpdating && draws.isNotEmpty) provinceFilterBar(availableProvinces),
           const SizedBox(height: 14),
-          if (loading) const Center(child: Padding(padding: EdgeInsets.all(28), child: CircularProgressIndicator()))
-          else ...filteredDraws.map(drawCard),
+          if (loading) 
+            const Center(child: Padding(padding: EdgeInsets.all(28), child: CircularProgressIndicator()))
+          else if (isUpdating)
+            Center(child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 60),
+              child: Column(children: const [
+                Icon(Icons.hourglass_top, size: 48, color: brandRed),
+                SizedBox(height: 12),
+                Text('ĐANG CẬP NHẬT KẾT QUẢ...', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: ink)),
+                SizedBox(height: 6),
+                Text('Kết quả xổ số sẽ có đầy đủ lúc 16h35 hàng ngày.', style: TextStyle(fontSize: 12, color: Colors.black54)),
+              ]),
+            ))
+          else 
+            ...filteredDraws.map(drawCard),
           const SizedBox(height: 12),
           const Text('Dữ liệu cần được đối chiếu với thông báo chính thức của đơn vị phát hành xổ số.', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: Colors.black54)),
           const SizedBox(height: 22),
