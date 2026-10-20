@@ -23,7 +23,7 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Auto Fix Main Dart & Build APK
+      - name: Full Build & Auto-Fix Gradle
         run: |
           # 1. Đồng bộ tên project trong pubspec.yaml
           sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
@@ -36,10 +36,49 @@ jobs:
           rm -rf android
           flutter create . --platforms=android --org=com.example --project-name=vip_xo_so_app
 
-          # 4. Cấu hình minSdkVersion 21
-          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle
+          # 4. Ghi trực tiếp cấu hình minSdkVersion 21 và Java 17 chuẩn vào build.gradle
+          cat << 'EOF' > android/app/build.gradle
+          plugins {
+              id "com.android.application"
+              id "kotlin-android"
+              id "dev.flutter.flutter-gradle-plugin"
+          }
 
-          # 5. Cập nhật Icon ứng dụng tròn đẹp
+          android {
+              namespace "com.example.vip_xo_so_app"
+              compileSdk flutter.compileSdkVersion
+              ndkVersion flutter.ndkVersion
+
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_17
+                  targetCompatibility JavaVersion.VERSION_17
+              }
+
+              kotlinOptions {
+                  jvmTarget = '17'
+              }
+
+              defaultConfig {
+                  applicationId "com.example.vip_xo_so_app"
+                  minSdkVersion 21
+                  targetSdkVersion flutter.targetSdkVersion
+                  versionCode 1
+                  versionName "1.0.0"
+              }
+
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.debug
+                  }
+              }
+          }
+
+          flutter {
+              source '../..'
+          }
+          EOF
+
+          # 5. Cập nhật Icon ứng dụng tròn đẹp vào mọi thư mục mipmap
           mkdir -p android/app/src/main/res/mipmap-hdpi
           curl -L "https://i.imgur.com/8QG9sWb.png" -o android/app/src/main/res/mipmap-hdpi/ic_launcher.png
           mkdir -p android/app/src/main/res/mipmap-mdpi
