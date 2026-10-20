@@ -23,12 +23,18 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Build Final Stable APK
+      - name: Clean V1 & Recreate V2 Android & Build APK
         run: |
           # 1. Đồng bộ tên project trong pubspec.yaml
           sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
 
-          # 2. Cập nhật Icon ứng dụng tròn đẹp vào mọi thư mục mipmap
+          # 2. Xóa sạch khung android V1 cũ gây lỗi
+          rm -rf android
+
+          # 3. Tạo mới hoàn toàn khung Android V2 chuẩn mực
+          flutter create . --platforms=android --org=com.example --project-name=vip_xo_so_app
+
+          # 4. Cập nhật Icon ứng dụng tròn đẹp vào mọi thư mục mipmap
           mkdir -p android/app/src/main/res/mipmap-hdpi
           curl -L "https://i.imgur.com/8QG9sWb.png" -o android/app/src/main/res/mipmap-hdpi/ic_launcher.png
           mkdir -p android/app/src/main/res/mipmap-mdpi
@@ -40,7 +46,7 @@ jobs:
           mkdir -p android/app/src/main/res/mipmap-xxxhdpi
           cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
-          # 3. Tải các gói phụ thuộc và build trực tiếp bản debug
+          # 5. Tải các gói phụ thuộc và build trực tiếp bản debug
           flutter pub get
           flutter build apk --debug --no-tree-shake-icons
 
