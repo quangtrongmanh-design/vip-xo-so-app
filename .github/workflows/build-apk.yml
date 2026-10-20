@@ -28,25 +28,17 @@ jobs:
           # 1. Đồng bộ tên project trong pubspec.yaml
           sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
 
-          # 2. Re-create khung Android V2 chuẩn
+          # 2. Tạo khung Android V2
           rm -rf android
           flutter create . --platforms=android --org=com.example --project-name=vip_xo_so_app
 
-          # 3. Phủ Icon đỏ vàng kim rực rỡ sắc nét bằng mã SVG/PNG nội tại
-          cat << 'EOF' > icon.png.b64
-          iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAABHNCSVQICAgIfAhkiAAAAAlwSFlz
-          AAALEwAACxEBAQK1AAAAAXRSTlMAQObYZgAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFk
-          eXHJZTwAAAGTSURBVHja7ZpBCsIwEEU9S3fS3Xsn4lW8ieI1vIl4FS/iTfQOehPde9NAA00pLSpO
-          44MPmEwozb/5mcmkSZs2bdr/oT0A4AC6f2EHoAewA1AD2AGoAewA1AB2AGoAewA1AB2AGsAO4Aew
-          C+iS8wTo0pTGAIAnADvA3AGi8whAnx9x5nO2eI9p2sE2bX4eAnADXADMAJ4BzAAtAA34fXInCIB3
-          AM4A3AA6AFqS+z7u9XUBGACvAGwAuo3f38o04+2mC4ABcAeAAnADaAHs+mS7o/u9m38AmAE4AnAD
-          aAHows31PwCvAPoANIBbAIsB2w3f8I3/m+Y/AagBOAJwA2gBfP6X3ADMAAoAnQH3vX2898/6
-          EOF
-          base64 -d icon.png.b64 > default_icon.png
-
-          for md in mipmap-hdpi mipmap-mdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
+          # 3. Phủ Icon đỏ vàng kim vào toàn bộ thư mục mipmap
+          mkdir -p android/app/src/main/res/mipmap-hdpi
+          curl -L "https://raw.githubusercontent.com/quangtrongmanh-design/vip-xo-so-data/main/icon.png" -o android/app/src/main/res/mipmap-hdpi/ic_launcher.png || true
+          
+          for md in mipmap-mdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
             mkdir -p android/app/src/main/res/$md
-            cp default_icon.png android/app/src/main/res/$md/ic_launcher.png
+            cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/$md/ic_launcher.png || true
           done
 
           # 4. Cấu hình minSdkVersion 21
