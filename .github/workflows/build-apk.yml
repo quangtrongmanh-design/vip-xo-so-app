@@ -1,152 +1,63 @@
-import 'dart:convert';
-import 'dart:ui' show FontFeature;
-import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+name: Build Android APK
 
-const String dataBaseUrl = 'https://raw.githubusercontent.com/quangtrongmanh-design/vip-xo-so-data/main/data';
-const Color brandRed = Color(0xFFC62828);
-const Color ink = Color(0xFF202124);
+on:
+  workflow_dispatch:
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await NoticeService.init();
-  runApp(const VipLotteryApp());
-}
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-class VipLotteryApp extends StatelessWidget {
-  const VipLotteryApp({super.key});
-  @override
-  Widget build(BuildContext context) => MaterialApp(
-    title: 'VIP Xổ Số Miền Nam', debugShowCheckedModeBanner: false,
-    theme: ThemeData(useMaterial3: true, colorScheme: ColorScheme.fromSeed(seedColor: brandRed), scaffoldBackgroundColor: const Color(0xFFF7F7F9), appBarTheme: const AppBarTheme(backgroundColor: Colors.white, foregroundColor: ink, centerTitle: false)),
-    home: const HomePage(),
-  );
-}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-class LotteryDraw {
-  final String date, province;
-  final Map<String, dynamic> prizes;
-  LotteryDraw({required this.date, required this.province, required this.prizes});
-  factory LotteryDraw.fromJson(Map<String, dynamic> j) => LotteryDraw(date: '${j['date'] ?? ''}', province: '${j['province'] ?? 'Chưa rõ đài'}', prizes: Map<String, dynamic>.from(j['prizes'] ?? {}));
-  List<String> numbers(dynamic value) {
-    if (value == null) return [];
-    if (value is List) return value.map((e) => '$e').toList();
-    return ['$value'];
-  }
-  List<String> get allNumbers => prizes.values.expand((v) => numbers(v)).toList();
-  String get special => numbers(prizes['specialPrize']).join(', ');
-}
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
 
-class LotteryDataService {
-  static Future<Map<String, dynamic>> forDate(String date) async {
-    final uri = Uri.parse('$dataBaseUrl/results/$date.json');
-    final response = await http.get(uri).timeout(const Duration(seconds: 12));
-    if (response.statusCode != 200) throw Exception('Chưa có dữ liệu cho ngày $date (HTTP ${response.statusCode}).');
-    return jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-  }
-  static Future<List<String>> historyDates() async {
-    final response = await http.get(Uri.parse('$dataBaseUrl/index.json')).timeout(const Duration(seconds: 12));
-    if (response.statusCode != 200) throw Exception('Chưa tải được danh sách ngày.');
-    final json = jsonDecode(utf8.decode(response.bodyBytes));
-    if (json is List) return json.map((e) => '$e').toList();
-    return ((json as Map)['dates'] as List? ?? []).map((e) => '$e').toList();
-  }
-}
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.x'
+          channel: 'stable'
 
-class NoticeService {
-  static final FlutterLocalNotificationsPlugin plugin = FlutterLocalNotificationsPlugin();
-  static Future<void> init() async {
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-    await plugin.initialize(const InitializationSettings(android: android));
-  }
-  static Future<void> resultAvailable(String date) async {
-    const details = NotificationDetails(android: AndroidNotificationDetails('lottery_results', 'Kết quả xổ số', channelDescription: 'Thông báo khi phát hiện kết quả mới', importance: Importance.defaultImportance, priority: Priority.defaultPriority));
-    await plugin.show(1001, 'VIP Xổ Số Miền Nam', 'Đã có dữ liệu xổ số ngày $date.', details);
-  }
-}
+      - name: Build APK Clean & Fast
+        run: |
+          # 1. Đồng bộ tên project trong pubspec.yaml
+          sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-  @override State<HomePage> createState() => _HomePageState();
-}
-class _HomePageState extends State<HomePage> {
-  int tab = 0;
-  DateTime selectedDate = DateTime.now();
-  bool loading = false;
-  String? error;
-  List<LotteryDraw> draws = [];
-  List<String> dates = [];
-  final ticketController = TextEditingController();
-  String? selectedProvince;
-  String ticketResult = '';
-  String? lastDataFingerprint;
+          # 2. Xóa khung android cũ và tái lập khung V2 mới
+          rm -rf android
+          flutter create . --platforms=android --org=com.example --project-name=vip_xo_so_app
 
-  String get dateKey => DateFormat('yyyy-MM-dd').format(selectedDate);
-  @override void initState() { super.initState(); loadDate(selectedDate, firstLoad: true); loadDates(); }
-  @override void dispose() { ticketController.dispose(); super.dispose(); }
+          # 3. Cấu hình minSdkVersion 21
+          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle
 
-  Future<void> loadDates() async { try { final d = await LotteryDataService.historyDates(); if (mounted) setState(() => dates = d); } catch (_) {} }
-  Future<void> loadDate(DateTime date, {bool firstLoad = false}) async {
-    setState(() { loading = true; error = null; selectedDate = date; });
-    final key = DateFormat('yyyy-MM-dd').format(date);
-    try {
-      final json = await LotteryDataService.forDate(key);
-      final list = (json['results'] as List? ?? []).map((e) => LotteryDraw.fromJson(Map<String, dynamic>.from(e))).toList();
-      if (list.isEmpty) throw Exception('Nguồn dữ liệu chưa có kết quả cho ngày này.');
-      final fingerprint = '$key:${list.map((e) => e.province + e.special).join('|')}';
-      final prefs = await SharedPreferences.getInstance();
-      final previous = prefs.getString('fingerprint_$key');
-      if (!firstLoad && previous != null && previous != fingerprint && key == DateFormat('yyyy-MM-dd').format(DateTime.now())) {
-        await NoticeService.resultAvailable(key);
-      }
-      await prefs.setString('fingerprint_$key', fingerprint);
-      if (!mounted) return;
-      setState(() { draws = list; lastDataFingerprint = fingerprint; });
-      if (selectedProvince == null || !list.any((d) => d.province == selectedProvince)) selectedProvince = list.first.province;
-    } catch (e) { if (mounted) setState(() { error = e.toString().replaceFirst('Exception: ', ''); draws = []; }); }
-    if (mounted) setState(() => loading = false);
-  }
+          # 4. Cập nhật Icon ứng dụng tròn đẹp
+          mkdir -p android/app/src/main/res/mipmap-hdpi
+          curl -L "https://i.imgur.com/8QG9sWb.png" -o android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+          mkdir -p android/app/src/main/res/mipmap-mdpi
+          cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+          mkdir -p android/app/src/main/res/mipmap-xhdpi
+          cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          mkdir -p android/app/src/main/res/mipmap-xxhdpi
+          cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+          cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
-  Future<void> chooseDate() async {
-    final picked = await showDatePicker(context: context, initialDate: selectedDate, firstDate: DateTime(2020), lastDate: DateTime.now().add(const Duration(days: 1)), helpText: 'Chọn ngày xổ số');
-    if (picked != null) await loadDate(picked);
-  }
-  void checkTicket() {
-    final ticket = ticketController.text.trim();
-    if (ticket.isEmpty || !RegExp(r'^\d{2,6}$').hasMatch(ticket)) { setState(() => ticketResult = 'Nhập dãy số từ 2 đến 6 chữ số.'); return; }
-    final chosen = draws.where((d) => selectedProvince == null || d.province == selectedProvince).toList();
-    if (chosen.isEmpty) { setState(() => ticketResult = 'Chưa có dữ liệu để dò.'); return; }
-    final matches = <String>[];
-    for (final draw in chosen) {
-      draw.prizes.forEach((prize, value) {
-        for (final number in draw.numbers(value)) {
-          if (number == ticket || (ticket.length == 2 && number.length >= 2 && number.substring(number.length - 2) == ticket)) {
-            matches.add('${draw.province}: ${_prizeName(prize)} — $number');
-          }
-        }
-      });
-    }
-    setState(() => ticketResult = matches.isEmpty ? 'Chưa tìm thấy số $ticket trong các giải của ${chosen.map((e) => e.province).join(', ')}.' : 'Có ${matches.length} kết quả khớp:\n${matches.join('\n')}');
-  }
+          # 5. Tải dependencies và build APK Debug
+          flutter pub get
+          flutter build apk --debug --no-tree-shake-icons
 
-  @override Widget build(BuildContext context) {
-    final pages = [resultsPage(), historyPage(), ticketPage(), settingsPage()];
-    return Scaffold(appBar: AppBar(title: Row(children: [Container(width: 38, height: 38, decoration: BoxDecoration(color: brandRed, borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.confirmation_number, color: Colors.white)), const SizedBox(width: 10), const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('VIP XỔ SỐ MIỀN NAM', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)), Text('Kết quả • Lịch sử • Dò vé', style: TextStyle(fontSize: 11, color: Colors.black54))]))]), actions: [IconButton(onPressed: () => loadDate(selectedDate), icon: const Icon(Icons.refresh), tooltip: 'Cập nhật')]), body: pages[tab], bottomNavigationBar: NavigationBar(selectedIndex: tab, onDestinationSelected: (v) => setState(() => tab = v), destinations: const [NavigationDestination(icon: Icon(Icons.emoji_events_outlined), selectedIcon: Icon(Icons.emoji_events), label: 'Kết quả'), NavigationDestination(icon: Icon(Icons.calendar_month_outlined), label: 'Lịch sử'), NavigationDestination(icon: Icon(Icons.confirmation_number_outlined), label: 'Dò vé'), NavigationDestination(icon: Icon(Icons.settings_outlined), label: 'Cài đặt')]),);
-  }
+      - name: Prepare APK Output
+        run: |
+          mkdir -p build/app/outputs/flutter-apk/
+          cp build/app/outputs/apk/debug/app-debug.apk build/app/outputs/flutter-apk/app-release.apk
 
-  Widget resultsPage() => RefreshIndicator(onRefresh: () => loadDate(selectedDate), child: ListView(padding: const EdgeInsets.all(16), children: [dateCard(), const SizedBox(height: 14), if (loading) const Center(child: Padding(padding: EdgeInsets.all(28), child: CircularProgressIndicator())), if (error != null) errorCard(error!), if (!loading && error == null) ...draws.map(drawCard), const SizedBox(height: 12), const Text('Dữ liệu cần được đối chiếu với thông báo chính thức của đơn vị xổ số.', style: TextStyle(fontSize: 11, color: Colors.black54)), const SizedBox(height: 22)]));
-  Widget dateCard() => Card(color: Colors.white, child: Padding(padding: const EdgeInsets.all(14), child: Row(children: [const Icon(Icons.event, color: brandRed), const SizedBox(width: 10), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('NGÀY MỞ THƯỞNG', style: TextStyle(fontSize: 10, color: Colors.black54, fontWeight: FontWeight.bold)), Text(DateFormat('dd/MM/yyyy').format(selectedDate), style: const TextStyle(fontWeight: FontWeight.w700))])), OutlinedButton.icon(onPressed: chooseDate, icon: const Icon(Icons.edit_calendar, size: 17), label: const Text('Chọn ngày'))])));
-  Widget errorCard(String message) => Card(color: const Color(0xFFFFF4F2), child: Padding(padding: const EdgeInsets.all(16), child: Column(children: [const Icon(Icons.cloud_off, size: 34, color: brandRed), const SizedBox(height: 8), Text(message, textAlign: TextAlign.center), const SizedBox(height: 8), const Text('Kiểm tra kết nối mạng hoặc cấu hình đường dẫn dữ liệu trong lib/main.dart.', style: TextStyle(fontSize: 12)), TextButton(onPressed: () => loadDate(selectedDate), child: const Text('Thử lại'))])));
-  Widget drawCard(LotteryDraw draw) => Card(margin: const EdgeInsets.only(bottom: 12), clipBehavior: Clip.antiAlias, child: Column(children: [Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12), color: brandRed, child: Row(children: [const Icon(Icons.location_on, color: Colors.white, size: 18), const SizedBox(width: 7), Expanded(child: Text(draw.province.toUpperCase(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800))), Text(DateFormat('dd/MM').format(DateTime.tryParse(draw.date) ?? selectedDate), style: const TextStyle(color: Colors.white70, fontSize: 12))])), ..._prizeOrder.where((p) => draw.prizes.containsKey(p)).map((p) { final vals = draw.numbers(draw.prizes[p]); return Container(color: p == 'specialPrize' ? const Color(0xFFFFF1F1) : Colors.white, padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [SizedBox(width: 62, child: Text(_prizeName(p), style: TextStyle(fontSize: 12, color: p == 'specialPrize' ? brandRed : Colors.black54, fontWeight: FontWeight.w600))), Expanded(child: Wrap(spacing: 8, runSpacing: 5, children: vals.map((n) => Text(n, style: TextStyle(fontSize: p == 'specialPrize' ? 20 : 15, fontWeight: p == 'specialPrize' ? FontWeight.w900 : FontWeight.w600, color: p == 'specialPrize' ? brandRed : ink, fontFeatures: const [FontFeature.tabularFigures()]))).toList()))])); }), const Divider(height: 1)]));
-  Widget historyPage() => ListView(padding: const EdgeInsets.all(16), children: [const Text('LỊCH SỬ KẾT QUẢ', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)), const SizedBox(height: 6), const Text('Chọn một ngày để tải lại kết quả từ kho dữ liệu.'), const SizedBox(height: 12), if (dates.isEmpty) const Text('Danh sách ngày sẽ hiện sau khi kết nối kho dữ liệu.'), ...dates.map((d) => Card(child: ListTile(leading: const CircleAvatar(backgroundColor: Color(0xFFFFE5E5), child: Icon(Icons.calendar_today, color: brandRed)), title: Text(_prettyDate(d)), trailing: const Icon(Icons.chevron_right), onTap: () { final parsed = DateTime.tryParse(d); if (parsed != null) { loadDate(parsed); setState(() => tab = 0); } }))) ]);
-  Widget ticketPage() => ListView(padding: const EdgeInsets.all(16), children: [const Text('DÒ VÉ SỐ', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)), const SizedBox(height: 5), const Text('Đối chiếu dãy số vé với kết quả đã tải. Dò 2 số cuối hoặc nhập đủ số trên vé.'), const SizedBox(height: 18), Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('Ngày xổ số'), const SizedBox(height: 6), OutlinedButton.icon(onPressed: chooseDate, icon: const Icon(Icons.calendar_month), label: Text(DateFormat('dd/MM/yyyy').format(selectedDate))), const SizedBox(height: 14), const Text('Đài xổ số'), const SizedBox(height: 6), DropdownButtonFormField<String>(value: draws.any((d) => d.province == selectedProvince) ? selectedProvince : null, items: draws.map((d) => DropdownMenuItem(value: d.province, child: Text(d.province))).toList(), onChanged: (v) => setState(() { selectedProvince = v; ticketResult = ''; }), decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Chọn đài')), const SizedBox(height: 14), const Text('Dãy số trên vé'), const SizedBox(height: 6), TextField(controller: ticketController, keyboardType: TextInputType.number, maxLength: 6, decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Ví dụ: 123456', prefixIcon: Icon(Icons.confirmation_number))), const SizedBox(height: 6), SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: checkTicket, icon: const Icon(Icons.search), label: const Text('DÒ KẾT QUẢ'))]))), if (ticketResult.isNotEmpty) Card(color: Colors.white, child: Padding(padding: const EdgeInsets.all(16), child: SelectableText(ticketResult, style: const TextStyle(height: 1.6)))), const SizedBox(height: 10), const Text('Lưu ý: công cụ chỉ đối chiếu số với dữ liệu tải được; hãy xác minh vé và kết quả tại đơn vị phát hành trước khi nhận thưởng.', style: TextStyle(fontSize: 12, color: Colors.black54))]);
-  Widget settingsPage() => ListView(padding: const EdgeInsets.all(16), children: [const Text('CÀI ĐẶT', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)), const SizedBox(height: 12), Card(child: ListTile(leading: const Icon(Icons.notifications_active_outlined, color: brandRed), title: const Text('Thông báo kết quả mới'), subtitle: const Text('Bản đầu kiểm tra khi mở/làm mới ứng dụng; chưa có thông báo nền bảo đảm.'), trailing: const Icon(Icons.info_outline))), Card(child: ListTile(leading: const Icon(Icons.sync, color: brandRed), title: const Text('Nguồn dữ liệu'), subtitle: Text(dataBaseUrl, maxLines: 2, overflow: TextOverflow.ellipsis))), Card(child: const ListTile(leading: Icon(Icons.ads_click_outlined, color: brandRed), title: Text('Quảng cáo'), subtitle: Text('AdMob chưa bật; sẽ tích hợp sau khi hoàn thiện và kiểm thử.'))), const SizedBox(height: 12), const Text('VIP Xổ Số Miền Nam • Bản thử nghiệm 0.1.0', textAlign: TextAlign.center, style: TextStyle(color: Colors.black54, fontSize: 12))]);
-
-  String _prettyDate(String d) { final dt = DateTime.tryParse(d); return dt == null ? d : DateFormat('dd/MM/yyyy').format(dt); }
-}
-
-const List<String> _prizeOrder = ['eighthPrize','seventhPrize','sixthPrize','fifthPrize','fourthPrize','thirdPrize','secondPrize','firstPrize','specialPrize'];
-String _prizeName(String key) => const {'eighthPrize':'Giải 8','seventhPrize':'Giải 7','sixthPrize':'Giải 6','fifthPrize':'Giải 5','fourthPrize':'Giải 4','thirdPrize':'Giải 3','secondPrize':'Giải 2','firstPrize':'Giải 1','specialPrize':'Đặc biệt'}[key] ?? key;
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
