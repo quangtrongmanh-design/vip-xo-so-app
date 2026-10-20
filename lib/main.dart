@@ -20,8 +20,14 @@ class VipLotteryApp extends StatelessWidget {
   const VipLotteryApp({super.key});
   @override
   Widget build(BuildContext context) => MaterialApp(
-    title: 'VIP Xổ Số Miền Nam', debugShowCheckedModeBanner: false,
-    theme: ThemeData(useMaterial3: true, colorScheme: ColorScheme.fromSeed(seedColor: brandRed), scaffoldBackgroundColor: const Color(0xFFF7F7F9), appBarTheme: const AppBarTheme(backgroundColor: Colors.white, foregroundColor: ink, centerTitle: false)),
+    title: 'VIP Xổ Số Miền Nam',
+    debugShowCheckedModeBanner: false,
+    theme: ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(seedColor: brandRed),
+      scaffoldBackgroundColor: const Color(0xFFF7F7F9),
+      appBarTheme: const AppBarTheme(backgroundColor: Colors.white, foregroundColor: ink, centerTitle: false),
+    ),
     home: const HomePage(),
   );
 }
@@ -30,7 +36,11 @@ class LotteryDraw {
   final String date, province;
   final Map<String, dynamic> prizes;
   LotteryDraw({required this.date, required this.province, required this.prizes});
-  factory LotteryDraw.fromJson(Map<String, dynamic> j) => LotteryDraw(date: '${j['date'] ?? ''}', province: '${j['province'] ?? 'Chưa rõ đài'}', prizes: Map<String, dynamic>.from(j['prizes'] ?? {}));
+  factory LotteryDraw.fromJson(Map<String, dynamic> j) => LotteryDraw(
+    date: '${j['date'] ?? ''}',
+    province: '${j['province'] ?? 'Chưa rõ đài'}',
+    prizes: Map<String, dynamic>.from(j['prizes'] ?? {}),
+  );
   List<String> numbers(dynamic value) {
     if (value == null) return [];
     if (value is List) return value.map((e) => '$e').toList();
@@ -113,7 +123,15 @@ class NoticeService {
     await plugin.initialize(const InitializationSettings(android: android));
   }
   static Future<void> resultAvailable(String date) async {
-    const details = NotificationDetails(android: AndroidNotificationDetails('lottery_results', 'Kết quả xổ số', channelDescription: 'Thông báo khi phát hiện kết quả mới', importance: Importance.defaultImportance, priority: Priority.defaultPriority));
+    const details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'lottery_results',
+        'Kết quả xổ số',
+        channelDescription: 'Thông báo khi phát hiện kết quả mới',
+        importance: Importance.defaultImportance,
+        priority: Priority.defaultPriority,
+      ),
+    );
     await plugin.show(1001, 'VIP Xổ Số Miền Nam', 'Đã có dữ liệu xổ số ngày $date.', details);
   }
 }
@@ -122,6 +140,7 @@ class HomePage extends StatefulWidget {
   const HomePage({super.key});
   @override State<HomePage> createState() => _HomePageState();
 }
+
 class _HomePageState extends State<HomePage> {
   int tab = 0;
   DateTime selectedDate = DateTime.now();
@@ -153,9 +172,16 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> chooseDate() async {
-    final picked = await showDatePicker(context: context, initialDate: selectedDate, firstDate: DateTime(2020), lastDate: DateTime.now().add(const Duration(days: 1)), helpText: 'Chọn ngày xổ số');
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 1)),
+      helpText: 'Chọn ngày xổ số',
+    );
     if (picked != null) await loadDate(picked);
   }
+
   void checkTicket() {
     final ticket = ticketController.text.trim();
     if (ticket.isEmpty || !RegExp(r'^\d{2,6}$').hasMatch(ticket)) { setState(() => ticketResult = 'Nhập dãy số từ 2 đến 6 chữ số.'); return; }
@@ -176,16 +202,163 @@ class _HomePageState extends State<HomePage> {
 
   @override Widget build(BuildContext context) {
     final pages = [resultsPage(), historyPage(), ticketPage(), settingsPage()];
-    return Scaffold(appBar: AppBar(title: Row(children: [Container(width: 38, height: 38, decoration: BoxDecoration(color: brandRed, borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.confirmation_number, color: Colors.white)), const SizedBox(width: 10), const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('VIP XỔ SỐ MIỀN NAM', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)), Text('Kết quả • Lịch sử • Dò vé', style: TextStyle(fontSize: 11, color: Colors.black54))]))]), actions: [IconButton(onPressed: () => loadDate(selectedDate), icon: const Icon(Icons.refresh), tooltip: 'Cập nhật')]), body: pages[tab], bottomNavigationBar: NavigationBar(selectedIndex: tab, onDestinationSelected: (v) => setState(() => tab = v), destinations: const [NavigationDestination(icon: Icon(Icons.emoji_events_outlined), selectedIcon: Icon(Icons.emoji_events), label: 'Kết quả'), NavigationDestination(icon: Icon(Icons.calendar_month_outlined), label: 'Lịch sử'), NavigationDestination(icon: Icon(Icons.confirmation_number_outlined), label: 'Dò vé'), NavigationDestination(icon: Icon(Icons.settings_outlined), label: 'Cài đặt')]),);
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(children: [
+          Container(width: 38, height: 38, decoration: BoxDecoration(color: brandRed, borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.confirmation_number, color: Colors.white)),
+          const SizedBox(width: 10),
+          const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('VIP XỔ SỐ MIỀN NAM', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)), Text('Kết quả • Lịch sử • Dò vé', style: TextStyle(fontSize: 11, color: Colors.black54))])),
+        ]),
+        actions: [IconButton(onPressed: () => loadDate(selectedDate), icon: const Icon(Icons.refresh), tooltip: 'Cập nhật')],
+      ),
+      body: pages[tab],
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: tab,
+        onDestinationSelected: (v) => setState(() => tab = v),
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.emoji_events_outlined), selectedIcon: Icon(Icons.emoji_events), label: 'Kết quả'),
+          NavigationDestination(icon: Icon(Icons.calendar_month_outlined), label: 'Lịch sử'),
+          NavigationDestination(icon: Icon(Icons.confirmation_number_outlined), label: 'Dò vé'),
+          NavigationDestination(icon: Icon(Icons.settings_outlined), label: 'Cài đặt'),
+        ],
+      ),
+    );
   }
 
-  Widget resultsPage() => RefreshIndicator(onRefresh: () => loadDate(selectedDate), child: ListView(padding: const EdgeInsets.all(16), children: [dateCard(), const SizedBox(height: 14), if (loading) const Center(child: Padding(padding: EdgeInsets.all(28), child: CircularProgressIndicator())), if (error != null) errorCard(error!), if (!loading && error == null) ...draws.map(drawCard), const SizedBox(height: 12), const Text('Dữ liệu cần được đối chiếu với thông báo chính thức của đơn vị xổ số.', style: TextStyle(fontSize: 11, color: Colors.black54)), const SizedBox(height: 22)]));
-  Widget dateCard() => Card(color: Colors.white, child: Padding(padding: const EdgeInsets.all(14), child: Row(children: [const Icon(Icons.event, color: brandRed), const SizedBox(width: 10), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('NGÀY MỞ THƯỞNG', style: TextStyle(fontSize: 10, color: Colors.black54, fontWeight: FontWeight.bold)), Text(DateFormat('dd/MM/yyyy').format(selectedDate), style: const TextStyle(fontWeight: FontWeight.w700))])), OutlinedButton.icon(onPressed: chooseDate, icon: const Icon(Icons.edit_calendar, size: 17), label: const Text('Chọn ngày'))])));
-  Widget errorCard(String message) => Card(color: const Color(0xFFFFF4F2), child: Padding(padding: const EdgeInsets.all(16), child: Column(children: [const Icon(Icons.cloud_off, size: 34, color: brandRed), const SizedBox(height: 8), Text(message, textAlign: TextAlign.center), const SizedBox(height: 8), TextButton(onPressed: () => loadDate(selectedDate), child: const Text('Thử lại'))])));
-  Widget drawCard(LotteryDraw draw) => Card(margin: const EdgeInsets.only(bottom: 12), clipBehavior: Clip.antiAlias, child: Column(children: [Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12), color: brandRed, child: Row(children: [const Icon(Icons.location_on, color: Colors.white, size: 18), const SizedBox(width: 7), Expanded(child: Text(draw.province.toUpperCase(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800))), Text(DateFormat('dd/MM').format(DateTime.tryParse(draw.date) ?? selectedDate), style: const TextStyle(color: Colors.white70, fontSize: 12))])), ..._prizeOrder.where((p) => draw.prizes.containsKey(p)).map((p) { final vals = draw.numbers(draw.prizes[p]); return Container(color: p == 'specialPrize' ? const Color(0xFFFFF1F1) : Colors.white, padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [SizedBox(width: 62, child: Text(_prizeName(p), style: TextStyle(fontSize: 12, color: p == 'specialPrize' ? brandRed : Colors.black54, fontWeight: FontWeight.w600))), Expanded(child: Wrap(spacing: 8, runSpacing: 5, children: vals.map((n) => Text(n, style: TextStyle(fontSize: p == 'specialPrize' ? 20 : 15, fontWeight: p == 'specialPrize' ? FontWeight.w900 : FontWeight.w600, color: p == 'specialPrize' ? brandRed : ink, fontFeatures: const [FontFeature.tabularFigures()]))).toList()))])); }), const Divider(height: 1)]));
-  Widget historyPage() => ListView(padding: const EdgeInsets.all(16), children: [const Text('LỊCH SỬ KẾT QUẢ', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)), const SizedBox(height: 6), const Text('Chọn một ngày để tải lại kết quả từ kho dữ liệu.'), const SizedBox(height: 12), if (dates.isEmpty) const Text('Danh sách ngày sẽ hiện sau khi kết nối kho dữ liệu.'), ...dates.map((d) => Card(child: ListTile(leading: const CircleAvatar(backgroundColor: Color(0xFFFFE5E5), child: Icon(Icons.calendar_today, color: brandRed)), title: Text(_prettyDate(d)), trailing: const Icon(Icons.chevron_right), onTap: () { final parsed = DateTime.tryParse(d); if (parsed != null) { loadDate(parsed); setState(() => tab = 0); } }))) ]);
-  Widget ticketPage() => ListView(padding: const EdgeInsets.all(16), children: [const Text('DÒ VÉ SỐ', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)), const SizedBox(height: 5), const Text('Đối chiếu dãy số vé với kết quả đã tải. Dò 2 số cuối hoặc nhập đủ số trên vé.'), const SizedBox(height: 18), Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('Ngày xổ số'), const SizedBox(height: 6), OutlinedButton.icon(onPressed: chooseDate, icon: const Icon(Icons.calendar_month), label: Text(DateFormat('dd/MM/yyyy').format(selectedDate))), const SizedBox(height: 14), const Text('Đài xổ số'), const SizedBox(height: 6), DropdownButtonFormField<String>(value: draws.any((d) => d.province == selectedProvince) ? selectedProvince : null, items: draws.map((d) => DropdownMenuItem(value: d.province, child: Text(d.province))).toList(), onChanged: (v) => setState(() { selectedProvince = v; ticketResult = ''; }), decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Chọn đài')), const SizedBox(height: 14), const Text('Dãy số trên vé'), const SizedBox(height: 6), TextField(controller: ticketController, keyboardType: TextInputType.number, maxLength: 6, decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Ví dụ: 123456', prefixIcon: Icon(Icons.confirmation_number))), const SizedBox(height: 6), SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: checkTicket, icon: const Icon(Icons.search), label: const Text('DÒ KẾT QUẢ'))]))), if (ticketResult.isNotEmpty) Card(color: Colors.white, child: Padding(padding: const EdgeInsets.all(16), child: SelectableText(ticketResult, style: const TextStyle(height: 1.6)))), const SizedBox(height: 10), const Text('Lưu ý: công cụ chỉ đối chiếu số với dữ liệu tải được; hãy xác minh vé và kết quả tại đơn vị phát hành trước khi nhận thưởng.', style: TextStyle(fontSize: 12, color: Colors.black54))]);
-  Widget settingsPage() => ListView(padding: const EdgeInsets.all(16), children: [const Text('CÀI ĐẶT', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)), const SizedBox(height: 12), Card(child: ListTile(leading: const Icon(Icons.notifications_active_outlined, color: brandRed), title: const Text('Thông báo kết quả mới'), subtitle: const Text('Bản đầu kiểm tra khi mở/làm mới ứng dụng; chưa có thông báo nền bảo đảm.'), trailing: const Icon(Icons.info_outline))), Card(child: ListTile(leading: const Icon(Icons.sync, color: brandRed), title: const Text('Nguồn dữ liệu'), subtitle: Text(dataBaseUrl, maxLines: 2, overflow: TextOverflow.ellipsis))), Card(child: const ListTile(leading: Icon(Icons.ads_click_outlined, color: brandRed), title: Text('Quảng cáo'), subtitle: Text('AdMob chưa bật; sẽ tích hợp sau khi hoàn thiện và kiểm thử.'))), const SizedBox(height: 12), const Text('VIP Xổ Số Miền Nam • Bản thử nghiệm 0.1.0', textAlign: TextAlign.center, style: TextStyle(color: Colors.black54, fontSize: 12))]);
+  Widget resultsPage() => RefreshIndicator(
+    onRefresh: () => loadDate(selectedDate),
+    child: ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        dateCard(),
+        const SizedBox(height: 14),
+        if (loading) const Center(child: Padding(padding: EdgeInsets.all(28), child: CircularProgressIndicator())),
+        if (error != null) errorCard(error!),
+        if (!loading && error == null) ...draws.map(drawCard),
+        const SizedBox(height: 12),
+        const Text('Dữ liệu cần được đối chiếu với thông báo chính thức của đơn vị xổ số.', style: TextStyle(fontSize: 11, color: Colors.black54)),
+        const SizedBox(height: 22),
+      ],
+    ),
+  );
+
+  Widget dateCard() => Card(
+    color: Colors.white,
+    child: Padding(
+      padding: const EdgeInsets.all(14),
+      child: Row(children: [
+        const Icon(Icons.event, color: brandRed),
+        const SizedBox(width: 10),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('NGÀY MỞ THƯỞNG', style: TextStyle(fontSize: 10, color: Colors.black54, fontWeight: FontWeight.bold)), Text(DateFormat('dd/MM/yyyy').format(selectedDate), style: const TextStyle(fontWeight: FontWeight.w700))])),
+        OutlinedButton.icon(onPressed: chooseDate, icon: const Icon(Icons.edit_calendar, size: 17), label: const Text('Chọn ngày')),
+      ]),
+    ),
+  );
+
+  Widget errorCard(String message) => Card(
+    color: const Color(0xFFFFF4F2),
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(children: [
+        const Icon(Icons.cloud_off, size: 34, color: brandRed),
+        const SizedBox(height: 8),
+        Text(message, textAlign: TextAlign.center),
+        const SizedBox(height: 8),
+        TextButton(onPressed: () => loadDate(selectedDate), child: const Text('Thử lại')),
+      ]),
+    ),
+  );
+
+  Widget drawCard(LotteryDraw draw) => Card(
+    margin: const EdgeInsets.only(bottom: 12),
+    clipBehavior: Clip.antiAlias,
+    child: Column(children: [
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        color: brandRed,
+        child: Row(children: [
+          const Icon(Icons.location_on, color: Colors.white, size: 18),
+          const SizedBox(width: 7),
+          Expanded(child: Text(draw.province.toUpperCase(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800))),
+          Text(DateFormat('dd/MM').format(DateTime.tryParse(draw.date) ?? selectedDate), style: const TextStyle(color: Colors.white70, fontSize: 12)),
+        ]),
+      ),
+      ..._prizeOrder.where((p) => draw.prizes.containsKey(p)).map((p) {
+        final vals = draw.numbers(draw.prizes[p]);
+        return Container(
+          color: p == 'specialPrize' ? const Color(0xFFFFF1F1) : Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(width: 62, child: Text(_prizeName(p), style: TextStyle(fontSize: 12, color: p == 'specialPrize' ? brandRed : Colors.black54, fontWeight: FontWeight.w600))),
+              Expanded(child: Wrap(spacing: 8, runSpacing: 5, children: vals.map((n) => Text(n, style: TextStyle(fontSize: p == 'specialPrize' ? 20 : 15, fontWeight: p == 'specialPrize' ? FontWeight.w900 : FontWeight.w600, color: p == 'specialPrize' ? brandRed : ink, fontFeatures: const [FontFeature.tabularFigures()]))).toList())),
+            ],
+          ),
+        );
+      }),
+      const Divider(height: 1),
+    ]),
+  );
+
+  Widget historyPage() => ListView(
+    padding: const EdgeInsets.all(16),
+    children: [
+      const Text('LỊCH SỬ KẾT QUẢ', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+      const SizedBox(height: 6),
+      const Text('Chọn một ngày để tải lại kết quả từ kho dữ liệu.'),
+      const SizedBox(height: 12),
+      if (dates.isEmpty) const Text('Danh sách ngày sẽ hiện sau khi kết nối kho dữ liệu.'),
+      ...dates.map((d) => Card(child: ListTile(leading: const CircleAvatar(backgroundColor: Color(0xFFFFE5E5), child: Icon(Icons.calendar_today, color: brandRed)), title: Text(_prettyDate(d)), trailing: const Icon(Icons.chevron_right), onTap: () { final parsed = DateTime.tryParse(d); if (parsed != null) { loadDate(parsed); setState(() => tab = 0); } }))),
+    ],
+  );
+
+  Widget ticketPage() => ListView(
+    padding: const EdgeInsets.all(16),
+    children: [
+      const Text('DÒ VÉ SỐ', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+      const SizedBox(height: 5),
+      const Text('Đối chiếu dãy số vé với kết quả đã tải. Dò 2 số cuối hoặc nhập đủ số trên vé.'),
+      const SizedBox(height: 18),
+      Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('Ngày xổ số'),
+            const SizedBox(height: 6),
+            OutlinedButton.icon(onPressed: chooseDate, icon: const Icon(Icons.calendar_month), label: Text(DateFormat('dd/MM/yyyy').format(selectedDate))),
+            const SizedBox(height: 14),
+            const Text('Đài xổ số'),
+            const SizedBox(height: 6),
+            DropdownButtonFormField<String>(value: draws.any((d) => d.province == selectedProvince) ? selectedProvince : null, items: draws.map((d) => DropdownMenuItem(value: d.province, child: Text(d.province))).toList(), onChanged: (v) => setState(() { selectedProvince = v; ticketResult = ''; }), decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Chọn đài')),
+            const SizedBox(height: 14),
+            const Text('Dãy số trên vé'),
+            const SizedBox(height: 6),
+            TextField(controller: ticketController, keyboardType: TextInputType.number, maxLength: 6, decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Ví dụ: 123456', prefixIcon: Icon(Icons.confirmation_number))),
+            const SizedBox(height: 6),
+            SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: checkTicket, icon: const Icon(Icons.search), label: const Text('DÒ KẾT QUẢ'))),
+          ]),
+        ),
+      ),
+      if (ticketResult.isNotEmpty) Card(color: Colors.white, child: Padding(padding: const EdgeInsets.all(16), child: SelectableText(ticketResult, style: const TextStyle(height: 1.6)))),
+      const SizedBox(height: 10),
+      const Text('Lưu ý: công cụ chỉ đối chiếu số với dữ liệu tải được; hãy xác minh vé và kết quả tại đơn vị phát hành trước khi nhận thưởng.', style: TextStyle(fontSize: 12, color: Colors.black54)),
+    ],
+  );
+
+  Widget settingsPage() => ListView(
+    padding: const EdgeInsets.all(16),
+    children: [
+      const Text('CÀI ĐẶT', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+      const SizedBox(height: 12),
+      Card(child: ListTile(leading: const Icon(Icons.notifications_active_outlined, color: brandRed), title: const Text('Thông báo kết quả mới'), subtitle: const Text('Bản đầu kiểm tra khi mở/làm mới ứng dụng; chưa có thông báo nền bảo đảm.'), trailing: const Icon(Icons.info_outline))),
+      Card(child: ListTile(leading: const Icon(Icons.sync, color: brandRed), title: const Text('Nguồn dữ liệu'), subtitle: Text(dataBaseUrl, maxLines: 2, overflow: TextOverflow.ellipsis))),
+      Card(child: const ListTile(leading: Icon(Icons.ads_click_outlined, color: brandRed), title: Text('Quảng cáo'), subtitle: Text('AdMob chưa bật; sẽ tích hợp sau khi hoàn thiện và kiểm thử.'))),
+      const SizedBox(height: 12),
+      const Text('VIP Xổ Số Miền Nam • Bản thử nghiệm 0.1.0', textAlign: TextAlign.center, style: TextStyle(color: Colors.black54, fontSize: 12)),
+    ],
+  );
 
   String _prettyDate(String d) { final dt = DateTime.tryParse(d); return dt == null ? d : DateFormat('dd/MM/yyyy').format(dt); }
 }
