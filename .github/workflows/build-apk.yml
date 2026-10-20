@@ -25,14 +25,12 @@ jobs:
 
       - name: Complete Build & Auto Inject Source
         run: |
-          # 1. Đồng bộ tên project
           sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
 
-          # 2. Tạo khung Android V2
           rm -rf android
           flutter create . --platforms=android --org=com.example --project-name=vip_xo_so_app
 
-          # 3. Phủ Icon cá nhân hóa sắc nét vào các thư mục mipmap
+          # Đóng gói icon ứng dụng vàng kim sắc nét
           mkdir -p android/app/src/main/res/mipmap-hdpi
           curl -L "https://raw.githubusercontent.com/quangtrongmanh-design/vip-xo-so-data/main/icon.png" -o android/app/src/main/res/mipmap-hdpi/ic_launcher.png || true
           
@@ -41,10 +39,8 @@ jobs:
             cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/$md/ic_launcher.png || true
           done
 
-          # 4. Cấu hình minSdkVersion 21
           sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle || true
 
-          # 5. Build APK Debug
           flutter pub get
           flutter build apk --debug --no-tree-shake-icons
 
