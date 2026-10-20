@@ -156,20 +156,55 @@ class _HomePageState extends State<HomePage> {
 
   void checkTicket() {
     final ticket = ticketController.text.trim();
-    if (ticket.isEmpty || !RegExp(r'^\d{2,6}$').hasMatch(ticket)) { setState(() => ticketResult = 'Vui lòng nhập dãy số từ 2 đến 6 chữ số.'); return; }
+    if (ticket.isEmpty || !RegExp(r'^\d{2,6}$').hasMatch(ticket)) { 
+      setState(() => ticketResult = 'Vui lòng nhập dãy số từ 2 đến 6 chữ số.'); 
+      return; 
+    }
+    
     final chosen = draws.where((d) => selectedFilterProvince == 'TẤT CẢ CÁC ĐÀI' || d.province == selectedFilterProvince).toList();
-    if (chosen.isEmpty) { setState(() => ticketResult = 'Chưa có dữ liệu cho đài đã chọn.'); return; }
+    if (chosen.isEmpty) { 
+      setState(() => ticketResult = 'Chưa có dữ liệu cho đài đã chọn.'); 
+      return; 
+    }
+    
     final matches = <String>[];
+    
     for (final draw in chosen) {
+      bool winExact = false;
+      
+      // 1. Kiểm tra trúng trực tiếp các giải
       draw.prizes.forEach((prize, value) {
         for (final number in draw.numbers(value)) {
-          if (number == ticket || (ticket.length == 2 && number.length >= 2 && number.substring(number.length - 2) == ticket)) {
+          if (number == ticket) {
+            winExact = true;
             matches.add('${draw.province}: ${_prizeName(prize)} — $number');
+          } else if (ticket.length == 2 && number.length >= 2 && number.substring(number.length - 2) == ticket) {
+            matches.add('${draw.province}: ${_prizeName(prize)} (Trúng 2 số cuối) — $number');
           }
         }
       });
+      
+      // 2. Kiểm tra Giải An ủi đối với Giải Đặc Biệt (Chỉ xét khi nhập đủ 6 chữ số)
+      if (ticket.length == 6 && !winExact) {
+        final specialList = draw.numbers(draw.prizes['specialPrize']);
+        for (final specialNum in specialList) {
+          if (specialNum.length == 6) {
+            int diffCount = 0;
+            for (int i = 0; i < 6; i++) {
+              if (ticket[i] != specialNum[i]) diffCount++;
+            }
+            // Sai đúng 1 vị trí bất kỳ trong 6 số
+            if (diffCount == 1) {
+              matches.add('${draw.province}: 🎉 Chúc mừng: Trúng giải An ủi (So với GĐB $specialNum)');
+            }
+          }
+        }
+      }
     }
-    setState(() => ticketResult = matches.isEmpty ? 'Chưa trúng thưởng số $ticket trên đài $selectedFilterProvince.' : '🎉 Chúc mừng! Có ${matches.length} kết quả trúng:\n${matches.join('\n')}');
+    
+    setState(() => ticketResult = matches.isEmpty 
+      ? 'Chưa trúng thưởng số $ticket trên đài $selectedFilterProvince.' 
+      : '🎉 KẾT QUẢ DÒ VÉ:\n${matches.join('\n')}');
   }
 
   @override Widget build(BuildContext context) {
@@ -276,7 +311,7 @@ class _HomePageState extends State<HomePage> {
             const Icon(Icons.location_on, color: Colors.white, size: 18),
             const SizedBox(width: 7),
             Expanded(child: Text(draw.province.toUpperCase(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15))),
-            Text(DateFormat('dd/MM/yyyy').format(drawDt), style: const TextStyle(color: Colors.white87, fontSize: 12)),
+            Text(DateFormat('dd/MM/yyyy').format(drawDt), style: const TextStyle(color: Colors.white70, fontSize: 12)),
           ]),
         ),
         ..._prizeOrder.where((p) => draw.prizes.containsKey(p)).map((p) {
