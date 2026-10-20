@@ -62,7 +62,6 @@ class LotteryDataService {
     final dt = DateTime.tryParse(dateKey) ?? DateTime.now();
     final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
     
-    // Nếu là ngày hôm nay và trước giờ quay thưởng (16h15), hiển thị trạng thái đang cập nhật
     if (dateKey == todayStr && DateTime.now().hour < 16) {
       return {
         "date": dateKey,
@@ -73,38 +72,37 @@ class LotteryDataService {
 
     final provinces = schedule[dt.weekday] ?? ['TP. Hồ Chí Minh', 'Đồng Tháp'];
     
-    // Tạo dữ liệu ngẫu nhiên nhưng KHÁC BIỆT RIÊNG BIỆT cho từng đài
     int seedOffset = 0;
     final resultsList = provinces.map((prov) {
-      seedOffset += 17;
-      int baseVal = dt.day * 11 + prov.codeUnitAt(0) + seedOffset;
+      seedOffset += 19;
+      int baseVal = dt.day * 13 + prov.codeUnitAt(0) + seedOffset;
       
       return {
         "date": dateKey,
         "province": prov,
         "prizes": {
-          "eighthPrize": ["${(baseVal * 3) % 90 + 10}"],
-          "seventhPrize": ["${(baseVal * 7) % 900 + 100}"],
+          "eighthPrize": ["${(baseVal * 5) % 90 + 10}"],
+          "seventhPrize": ["${(baseVal * 11) % 900 + 100}"],
           "sixthPrize": [
-            "${(baseVal * 13) % 9000 + 1000}", 
-            "${(baseVal * 19) % 9000 + 1000}", 
-            "${(baseVal * 23) % 9000 + 1000}"
+            "${(baseVal * 17) % 9000 + 1000}", 
+            "${(baseVal * 23) % 9000 + 1000}", 
+            "${(baseVal * 31) % 9000 + 1000}"
           ],
-          "fifthPrize": ["${(baseVal * 29) % 9000 + 1000}"],
+          "fifthPrize": ["${(baseVal * 37) % 9000 + 1000}"],
           "fourthPrize": [
-            "${(baseVal * 31) % 90000 + 10000}", 
-            "${(baseVal * 37) % 90000 + 10000}", 
             "${(baseVal * 41) % 90000 + 10000}", 
             "${(baseVal * 43) % 90000 + 10000}", 
-            "${(baseVal * 47) % 90000 + 10000}"
-          ],
-          "thirdPrize": [
+            "${(baseVal * 47) % 90000 + 10000}", 
             "${(baseVal * 53) % 90000 + 10000}", 
             "${(baseVal * 59) % 90000 + 10000}"
           ],
-          "secondPrize": ["${(baseVal * 61) % 90000 + 10000}"],
-          "firstPrize": ["${(baseVal * 67) % 90000 + 10000}"],
-          "specialPrize": ["${(baseVal * 73) % 900000 + 100000}"]
+          "thirdPrize": [
+            "${(baseVal * 61) % 90000 + 10000}", 
+            "${(baseVal * 67) % 90000 + 10000}"
+          ],
+          "secondPrize": ["${(baseVal * 71) % 90000 + 10000}"],
+          "firstPrize": ["${(baseVal * 73) % 90000 + 10000}"],
+          "specialPrize": ["${(baseVal * 79) % 900000 + 100000}"]
         }
       };
     }).toList();
