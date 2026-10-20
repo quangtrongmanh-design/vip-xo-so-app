@@ -23,27 +23,28 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Clean Android V1 & Build V2 APK
+      - name: Build Clean Android V2 APK
         run: |
           # 1. Đồng bộ tên project trong pubspec.yaml
           sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
 
-          # 2. Xóa sạch thư mục android cũ để triệt tiêu toàn bộ mã v1 embedding
+          # 2. Xóa khung android cũ tạo lại V2 chuẩn
           rm -rf android
-
-          # 3. Tạo lại khung Android V2 chuẩn mực hoàn toàn bằng Flutter 3.22
           flutter create . --platforms=android --org=com.example --project-name=vip_xo_so_app
 
-          # 4. Cấu hình minSdkVersion 21 và Java 17 trong build.gradle
-          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle || true
+          # 3. Giữ nguyên tệp lib/main.dart người dùng vừa cập nhật
+          git checkout lib/main.dart || true
 
-          # 5. Phủ Icon cá nhân hóa chất lượng cao vào toàn bộ thư mục mipmap
+          # 4. Phủ Icon cá nhân hóa chất lượng cao vào toàn bộ thư mục mipmap
           for md in mipmap-hdpi mipmap-mdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
             mkdir -p android/app/src/main/res/$md
             curl -L "https://i.imgur.com/8QG9sWb.png" -o android/app/src/main/res/$md/ic_launcher.png
           done
 
-          # 6. Lấy thư viện và thực hiện build APK Debug
+          # 5. Cấu hình minSdkVersion 21
+          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle || true
+
+          # 6. Tải dependencies và thực hiện build APK Debug
           flutter pub get
           flutter build apk --debug --no-tree-shake-icons
 
