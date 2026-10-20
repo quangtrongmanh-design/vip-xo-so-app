@@ -6,7 +6,6 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Sau khi tao GitHub repository cho backend, thay OWNER/REPO bang ten that.
 const String dataBaseUrl = 'https://raw.githubusercontent.com/quangtrongmanh-design/vip-xo-so-data/main/data';
 const Color brandRed = Color(0xFFC62828);
 const Color ink = Color(0xFF202124);
