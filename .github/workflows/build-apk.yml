@@ -23,19 +23,23 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Build APK Clean & Fast
+      - name: Auto Fix Main Dart & Build APK
         run: |
           # 1. Đồng bộ tên project trong pubspec.yaml
           sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
 
-          # 2. Xóa khung android cũ và tái lập khung V2 mới
+          # 2. Tự động tải file main.dart chuẩn 100% cú pháp dán đè vào lib/main.dart
+          mkdir -p lib
+          curl -L "https://raw.githubusercontent.com/quangtrongmanh-design/vip-xo-so-data/main/main.dart" -o lib/main.dart || true
+
+          # 3. Xóa khung android cũ và tái lập khung V2 mới
           rm -rf android
           flutter create . --platforms=android --org=com.example --project-name=vip_xo_so_app
 
-          # 3. Cấu hình minSdkVersion 21
+          # 4. Cấu hình minSdkVersion 21
           sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle
 
-          # 4. Cập nhật Icon ứng dụng tròn đẹp
+          # 5. Cập nhật Icon ứng dụng tròn đẹp
           mkdir -p android/app/src/main/res/mipmap-hdpi
           curl -L "https://i.imgur.com/8QG9sWb.png" -o android/app/src/main/res/mipmap-hdpi/ic_launcher.png
           mkdir -p android/app/src/main/res/mipmap-mdpi
@@ -47,7 +51,7 @@ jobs:
           mkdir -p android/app/src/main/res/mipmap-xxxhdpi
           cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
-          # 5. Tải dependencies và build APK Debug
+          # 6. Tải dependencies và thực hiện build debug APK
           flutter pub get
           flutter build apk --debug --no-tree-shake-icons
 
