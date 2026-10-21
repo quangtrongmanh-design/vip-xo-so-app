@@ -16,7 +16,7 @@ class VipLotteryApp extends StatelessWidget {
   const VipLotteryApp({super.key});
   @override
   Widget build(BuildContext context) => MaterialApp(
-    title: 'VIP Xổ Số Miền Nam',
+    title: 'Xổ Số',
     debugShowCheckedModeBanner: false,
     theme: ThemeData(
       useMaterial3: true,
@@ -43,6 +43,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int tab = 0;
+  bool showCustomAd = true;
   final ticketController = TextEditingController();
   String ticketResult = '';
   late final WebViewController webController;
@@ -53,6 +54,16 @@ class _HomePageState extends State<HomePage> {
     webController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.white)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (String url) {
+            webController.runJavaScript(
+              "var ads = document.querySelectorAll('iframe, ins.adsbygoogle, .ads-container'); "
+              "for (var i = 0; i < ads.length; i++) { ads[i].style.display = 'none'; }"
+            );
+          },
+        ),
+      )
       ..loadRequest(Uri.parse('https://xsmn.mobi'));
   }
 
@@ -65,7 +76,7 @@ class _HomePageState extends State<HomePage> {
       return; 
     }
     setState(() {
-      ticketResult = '🔍 Đã ghi nhận số $ticket.\nAnh Duy có thể xem trực tiếp kết quả chính xác từng giải của các đài ngay tại tab "Kết quả" phía trên để đối chiếu nhanh chóng và chuẩn xác nhất!';
+      ticketResult = '🔍 Đã ghi nhận số $ticket.\nAnh Duy xem kết quả chi tiết từng đài ngay tại tab "Kết quả" phía trên để đối chiếu nhanh chóng!';
     });
   }
 
@@ -77,7 +88,7 @@ class _HomePageState extends State<HomePage> {
           Container(width: 36, height: 36, decoration: BoxDecoration(color: brandRed, borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.confirmation_number, color: Colors.white, size: 20)),
           const SizedBox(width: 10),
           const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('VIP XỔ SỐ MIỀN NAM', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+            Text('XỔ SỐ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
             Text('Kết quả chuẩn 100% • Trực tiếp', style: TextStyle(fontSize: 11, color: Colors.black54))
           ])),
         ]),
@@ -89,7 +100,50 @@ class _HomePageState extends State<HomePage> {
           )
         ],
       ),
-      body: pages[tab],
+      body: Column(
+        children: [
+          if (showCustomAd)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFF3CD),
+                border: Border(bottom: BorderSide(color: Color(0xFFFFEEBA), width: 1)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.campaign, color: brandRed, size: 22),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      '🔥 VIP COFFEE & DỊCH VỤ SỐ — Tài trợ ứng dụng này',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF856404)),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Liên hệ đặt Banner Quảng Cáo: Anh Duy - An Giang')),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(color: brandRed, borderRadius: BorderRadius.circular(4)),
+                      child: const Text('LIÊN HỆ', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  InkWell(
+                    onTap: () => setState(() => showCustomAd = false),
+                    child: const Icon(Icons.close, size: 18, color: Colors.black54),
+                  ),
+                ],
+              ),
+            ),
+          Expanded(child: pages[tab]),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: tab,
         onDestinationSelected: (v) => setState(() => tab = v),
@@ -103,10 +157,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Tab 1: Kết quả WebView trực tiếp chuẩn 100% từ xsmn.mobi
   Widget resultsWebPage() => WebViewWidget(controller: webController);
 
-  // Tab 2: Lịch quay thưởng các đài Miền Nam trong tuần
   Widget infoPage() => ListView(
     padding: const EdgeInsets.all(16),
     children: [
@@ -131,7 +183,6 @@ class _HomePageState extends State<HomePage> {
     ),
   );
 
-  // Tab 3: Hướng dẫn dò vé số nhanh
   Widget ticketPage() => ListView(
     padding: const EdgeInsets.all(16),
     children: [
@@ -149,7 +200,7 @@ class _HomePageState extends State<HomePage> {
               maxLength: 6, 
               decoration: const InputDecoration(
                 border: OutlineInputBorder(), 
-                hintText: 'Ví dụ: 091891 hoặc 91', 
+                hintText: 'Ví dụ: 213684 hoặc 84', 
                 prefixIcon: Icon(Icons.confirmation_number)
               )
             ),
@@ -174,14 +225,13 @@ class _HomePageState extends State<HomePage> {
     ],
   );
 
-  // Tab 4: Cài đặt & Thông tin phiên bản
   Widget settingsPage() => ListView(
     padding: const EdgeInsets.all(16),
     children: [
       const Text('CÀI ĐẶT', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
       const SizedBox(height: 12),
       const Card(child: ListTile(leading: Icon(Icons.verified, color: brandRed), title: Text('Nguồn dữ liệu trực tuyến'), subtitle: Text('Đồng bộ thời gian thực chuẩn xác 100% từ xsmn.mobi'))),
-      Card(child: const ListTile(leading: Icon(Icons.verified_user_outlined, color: brandRed), title: Text('Phiên bản ứng dụng'), subtitle: Text('VIP Xổ Số Miền Nam • v2.0 Pro'))),
+      Card(child: const ListTile(leading: Icon(Icons.verified_user_outlined, color: brandRed), title: Text('Phiên bản ứng dụng'), subtitle: Text('Xổ Số • v2.1 Pro'))),
     ],
   );
 }
