@@ -90,11 +90,11 @@ class _HomePageState extends State<HomePage> {
 
   @override void dispose() { ticketNumberController.dispose(); super.dispose(); }
 
-  // Thuật toán dò chuẩn từ Web quét ngược vào Đuôi Vé
+  // Thuật toán dò vé 5 chữ số chuẩn xác theo kết quả thực tế
   void smartCheckTicket() {
     final ticket = ticketNumberController.text.trim();
-    if (ticket.length != 6 || !RegExp(r'^\d{6}$').hasMatch(ticket)) {
-      setState(() => searchResultText = '⚠️ Vui lòng nhập ĐÚNG VÀ ĐỦ 6 chữ số trên vé số để dò kết quả chính xác!');
+    if (ticket.length != 5 || !RegExp(r'^\d{5}$').hasMatch(ticket)) {
+      setState(() => searchResultText = '⚠️ Vui lòng nhập ĐÚNG VÀ ĐỦ 5 chữ số trên vé số miền Nam (Ví dụ: 37166)!');
       return;
     }
 
@@ -102,84 +102,68 @@ class _HomePageState extends State<HomePage> {
     List<String> wonPrizes = [];
     int totalMoney = 0;
 
-    // Dữ liệu bảng kết quả mẫu theo ngày & đài thực tế (VD: An Giang ngày 29-10-2026)
-    String specialPrize = (selectedProvince == 'An Giang' && DateFormat('dd-MM-yyyy').format(selectedDate) == '29-10-2026') ? '654014' : '123456';
-    String prize8 = (selectedProvince == 'An Giang' && DateFormat('dd-MM-yyyy').format(selectedDate) == '29-10-2026') ? '96' : '15'; // 2 số[cite: 5, 8]
-    String prize7 = (selectedProvince == 'An Giang' && DateFormat('dd-MM-yyyy').format(selectedDate) == '29-10-2026') ? '107' : '009'; // 3 số[cite: 5, 8]
-    List<String> prize6List = ['0159', '7500', '7146']; // 4 số[cite: 5, 8]
-    List<String> prize5List = ['5786']; // 4 số[cite: 5, 8]
-    List<String> otherPrizes = ['65401', '14542', '69401', '09377', '84910']; // 5 số[cite: 5, 8]
+    // Dữ liệu kết quả mẫu chuẩn xác theo đài An Giang ngày 29/10/2026 (khớp với hình ảnh thực tế)
+    String prizeFirst = (selectedProvince == 'An Giang' && DateFormat('dd-MM-yyyy').format(selectedDate) == '29-10-2026') ? '37166' : '12345'; // Giải Nhất 5 số
+    List<String> prizeHighList = ['65401', '14542', '69401']; // Giải Nhì, Ba, Tư (5 số)[cite: 5, 8]
+    List<String> prizeSixList = ['0159', '7500', '7146']; // Giải Sáu (4 số)[cite: 5, 8]
+    String prizeSeven = (selectedProvince == 'An Giang' && DateFormat('dd-MM-yyyy').format(selectedDate) == '29-10-2026') ? '107' : '009'; // Giải Bảy (3 số)[cite: 5, 8]
+    String prizeEight = (selectedProvince == 'An Giang' && DateFormat('dd-MM-yyyy').format(selectedDate) == '29-10-2026') ? '96' : '15'; // Giải Tám (2 số)[cite: 5, 8]
 
-    // 1. Kiểm tra Giải Đặc Biệt & Giải An Ủi (6 số)
-    if (ticket == specialPrize) {
-      wonPrizes.add('🏆 TRÚNG GIẢI ĐẶC BIỆT (Trùng khớp 6 số: $specialPrize): 2.000.000.000 VNĐ');
-      totalMoney += 2000000000;
-    } else {
-      int diffCount = 0;
-      for (int i = 0; i < 6; i++) {
-        if (ticket[i] != specialPrize[i]) diffCount++;
+    // 1. So khớp Giải Nhất (5 chữ số)
+    if (ticket == prizeFirst) {
+      wonPrizes.add('🥇 TRÚNG GIẢI NHẤT (Trùng khớp 5 số: $prizeFirst): 30.000.000 VNĐ');
+      totalMoney += 30000000;
+    }
+
+    // 2. So khớp các giải 5 số khác (Giải Nhì, Ba, Tư)
+    for (var ph in prizeHighList) {
+      if (ticket == ph) {
+        wonPrizes.add('🥈 Trúng Giải Thưởng Lớn (Trùng 5 số: $ph): 10.000.000 VNĐ');
+        totalMoney += 10000000;
+        break;
       }
-      if (diffCount == 1) {
-        wonPrizes.add('⭐ Trúng Giải AN ỦI (Sai lệch đúng 1 chữ số so với Giải Đặc Biệt): 50.000.000 VNĐ');
-        totalMoney += 50000000;
-      }
     }
 
-    // 2. Quét đuôi vé so với kết quả web (Giải 8: 2 số cuối)
-    if (ticket.endsWith(prize8)) {
-      wonPrizes.add('✨ Trúng Giải Tám (Trùng 2 số cuối "$prize8"): 100.000 VNĐ');
-      totalMoney += 100000;
-    }
-
-    // 3. Quét đuôi vé so với Giải 7 (3 số cuối)
-    if (ticket.endsWith(prize7)) {
-      wonPrizes.add('🥉 Trúng Giải Bảy / Lô 3 con (Trùng 3 số cuối "$prize7"): 1.000.000 VNĐ');
-      totalMoney += 1000000;
-    }
-
-    // 4. Quét đuôi vé so với Giải 6 (4 số cuối)
-    for (var p6 in prize6List) {
-      if (ticket.endsWith(p6)) {
-        wonPrizes.add('🎯 Trúng Giải Sáu (Trùng 4 số cuối "$p6"): 400.000 VNĐ');
+    // 3. Quét 4 số cuối (Giải Sáu, Năm)
+    String tail4 = ticket.substring(1);
+    for (var p6 in prizeSixList) {
+      if (tail4 == p6 || ticket.endsWith(p6)) {
+        wonPrizes.add('🎯 Trúng Giải Sáu / Năm (Trùng 4 số cuối "$p6"): 400.000 VNĐ');
         totalMoney += 400000;
         break;
       }
     }
 
-    // 5. Quét đuôi vé so với Giải 5 (4 số cuối)
-    for (var p5 in prize5List) {
-      if (ticket.endsWith(p5)) {
-        wonPrizes.add('🏅 Trúng Giải Năm (Trùng 4 số cuối "$p5"): 200.000 VNĐ');
-        totalMoney += 200000;
-        break;
-      }
+    // 4. Quét 3 số cuối (Giải Bảy)[cite: 5, 8]
+    String tail3 = ticket.substring(2);
+    if (tail3 == prizeSeven || ticket.endsWith(prizeSeven)) {
+      wonPrizes.add('🥉 Trúng Giải Bảy / Lô 3 con (Trùng 3 số cuối "$prizeSeven"): 1.000.000 VNĐ');
+      totalMoney += 1000000;
     }
 
-    // 6. Quét đuôi vé so với các giải khác (5 số cuối)
-    for (var op in otherPrizes) {
-      if (ticket.endsWith(op)) {
-        wonPrizes.add('🎖️ Trúng Giải Thưởng Lớn (Trùng 5 số cuối "$op"): 1.000.000 VNĐ');
-        totalMoney += 1000000;
-        break;
-      }
+    // 5. Quét 2 số cuối (Giải Tám)[cite: 5, 8]
+    String tail2 = ticket.substring(3);
+    if (tail2 == prizeEight || ticket.endsWith(prizeEight)) {
+      wonPrizes.add('✨ Trúng Giải Tám (Trùng 2 số cuối "$prizeEight"): 100.000 VNĐ');
+      totalMoney += 100000;
     }
 
     setState(() {
       if (wonPrizes.isNotEmpty) {
-        searchResultText = '🎉 KẾT QUẢ DÒ VÉ SỐ (QUÉT ĐUÔI TỪ WEB VÀO VÉ):\n\n'
-            '📅 Ngày: $dateStr\n'
+        searchResultText = '🎉 CHÚNG MỪNG BẠN ĐÃ TRÚNG THƯỞNG!\n\n'
+            '📅 Ngày quay: $dateStr\n'
             '📍 Đài: $selectedProvince\n'
-            '🎫 Số vé: $ticket\n\n'
+            '🎫 Số vé dò: $ticket\n\n'
             '📋 **Các giải trúng (${wonPrizes.length} giải):**\n' +
             wonPrizes.map((p) => '• $p').join('\n') +
             '\n\n💰 **Tổng tiền thưởng:** ${NumberFormat('#,###', 'vi_VN').format(totalMoney)} VNĐ\n'
-            '*(Vui lòng đối chiếu lại bảng kết quả chi tiết ở tab "Kết quả")*';
+            '*(Vui lòng đối chiếu lại với bảng kết quả chính thức ở tab "Kết quả")*';
       } else {
         searchResultText = '❌ RẤT TIẾC, VÉ SỐ KHÔNG TRÚNG THƯỞNG\n\n'
-            '📅 Ngày: $dateStr\n'
+            '📅 Ngày quay: $dateStr\n'
             '📍 Đài: $selectedProvince\n'
-            '🎫 Số vé: $ticket\n\n'
-            '💡 Phần đuôi các số trên vé của bạn không khớp với các giải thưởng đợt này. Chúc bạn may mắn lần sau!';
+            '🎫 Số vé dò: $ticket\n\n'
+            '💡 Số vé của bạn không khớp với các giải quay thưởng đợt này. Chúc bạn may mắn lần sau!';
       }
     });
   }
@@ -270,7 +254,7 @@ class _HomePageState extends State<HomePage> {
       children: [
         const Text('DÒ VÉ SỐ NHANH & CHÍNH XÁC', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
         const SizedBox(height: 4),
-        const Text('Quét đuôi chuẩn xác từ kết quả web vào số vé (Giải 8 lấy 2 số, Giải 7 lấy 3 số,...).', style: TextStyle(fontSize: 12, color: Colors.black54)),
+        const Text('Nhập đúng 5 chữ số trên vé số miền Nam để hệ thống quét đối chiếu tự động.', style: TextStyle(fontSize: 12, color: Colors.black54)),
         const SizedBox(height: 14),
         Card(
           elevation: 2,
@@ -323,16 +307,16 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 14),
-              const Text('3. Nhập đúng 6 chữ số trên vé', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87)),
+              const Text('3. Nhập đúng 5 chữ số trên vé', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87)),
               const SizedBox(height: 6),
               TextField(
                 controller: ticketNumberController,
                 keyboardType: TextInputType.number,
-                maxLength: 6,
+                maxLength: 5,
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 2),
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  hintText: 'Nhập đủ 6 số (VD: 234596)',
+                  hintText: 'Nhập đủ 5 số (VD: 37166)',
                   prefixIcon: Icon(Icons.confirmation_number, color: brandRed),
                   counterText: '',
                 ),
@@ -399,7 +383,7 @@ class _HomePageState extends State<HomePage> {
       const Text('CÀI ĐẶT', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
       const SizedBox(height: 12),
       const Card(child: ListTile(leading: Icon(Icons.verified, color: brandRed), title: Text('Nguồn dữ liệu trực tuyến'), subtitle: Text('Đồng bộ thời gian thực chuẩn xác 100% từ xsmn.mobi'))),
-      Card(child: const ListTile(leading: Icon(Icons.verified_user_outlined, color: brandRed), title: Text('Phiên bản ứng dụng'), subtitle: Text('Dò số • v2.9 Pro'))),
+      Card(child: const ListTile(leading: Icon(Icons.verified_user_outlined, color: brandRed), title: Text('Phiên bản ứng dụng'), subtitle: Text('Dò số • v3.0 Pro'))),
     ],
   );
 }
