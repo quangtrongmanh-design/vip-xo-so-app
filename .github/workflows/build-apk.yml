@@ -30,7 +30,9 @@ jobs:
           rm -rf android
           flutter create . --platforms=android --org=com.example --project-name=vip_xo_so_app
 
-          # Sử dụng trực tiếp file icon.png anh Duy vừa up lên
+          # Cập nhật tên hiển thị ngoài màn hình chính thành "Dò số"
+          sed -i 's/android:label=".*"/android:label="Dò số"/g' android/app/src/main/AndroidManifest.xml
+
           if [ -f "icon.png" ]; then
             for md in mipmap-hdpi mipmap-mdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
               mkdir -p android/app/src/main/res/$md
