@@ -16,7 +16,7 @@ class VipLotteryApp extends StatelessWidget {
   const VipLotteryApp({super.key});
   @override
   Widget build(BuildContext context) => MaterialApp(
-    title: 'Xổ Số',
+    title: 'Dò số',
     debugShowCheckedModeBanner: false,
     theme: ThemeData(
       useMaterial3: true,
@@ -42,10 +42,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int tab = 0;
+  int tab = 0; // Mặc định tab 0 là Dò ngay
   bool showCustomAd = true;
   
-  // Biến cho tính năng Dò Vé thông minh
   DateTime selectedDate = DateTime.now();
   String selectedProvince = 'Bến Tre';
   final ticketNumberController = TextEditingController();
@@ -84,7 +83,6 @@ class _HomePageState extends State<HomePage> {
 
   @override void dispose() { ticketNumberController.dispose(); super.dispose(); }
 
-  // Logic dò vé thông minh chuyển hướng trực tiếp đến trang kết quả ngày/đài tương ứng
   void smartCheckTicket() {
     final number = ticketNumberController.text.trim();
     if (number.isEmpty || !RegExp(r'^\d{2,6}$').hasMatch(number)) {
@@ -100,19 +98,20 @@ class _HomePageState extends State<HomePage> {
           '💡 Hệ thống đã chuyển trực tiếp sang Tab "Kết quả" với ngày và đài tương ứng để anh/chị đối chiếu số đuôi, giải đặc biệt và các giải một cách nhanh chóng nhất!';
     });
 
-    // Chuyển sang tab kết quả (Tab 0) và tải trang xsmn.mobi để khách hàng xem trực tiếp
-    setState(() => tab = 0);
+    // Chuyển sang tab Kết quả (Tab 1 sau khi hoán đổi)
+    setState(() => tab = 1);
   }
 
   @override Widget build(BuildContext context) {
-    final pages = [resultsWebPage(), infoPage(), smartTicketPage(), settingsPage()];
+    // Thứ tự các tab mới: 0: Dò ngay, 1: Kết quả, 2: Lịch quay, 3: Cài đặt
+    final pages = [smartTicketPage(), resultsWebPage(), infoPage(), settingsPage()];
     return Scaffold(
       appBar: AppBar(
         title: Row(children: [
           Container(width: 36, height: 36, decoration: BoxDecoration(color: brandRed, borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.confirmation_number, color: Colors.white, size: 20)),
           const SizedBox(width: 10),
           const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('XỔ SỐ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+            Text('DÒ SỐ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
             Text('Kết quả chuẩn 100% • Trực tiếp', style: TextStyle(fontSize: 11, color: Colors.black54))
           ])),
         ]),
@@ -172,9 +171,9 @@ class _HomePageState extends State<HomePage> {
         selectedIndex: tab,
         onDestinationSelected: (v) => setState(() => tab = v),
         destinations: const [
+          NavigationDestination(icon: Icon(Icons.search_outlined), selectedIcon: Icon(Icons.search), label: 'Dò ngay'),
           NavigationDestination(icon: Icon(Icons.emoji_events_outlined), selectedIcon: Icon(Icons.emoji_events), label: 'Kết quả'),
           NavigationDestination(icon: Icon(Icons.calendar_month_outlined), label: 'Lịch quay'),
-          NavigationDestination(icon: Icon(Icons.confirmation_number_outlined), label: 'Dò vé'),
           NavigationDestination(icon: Icon(Icons.settings_outlined), label: 'Cài đặt'),
         ],
       ),
@@ -183,31 +182,6 @@ class _HomePageState extends State<HomePage> {
 
   Widget resultsWebPage() => WebViewWidget(controller: webController);
 
-  Widget infoPage() => ListView(
-    padding: const EdgeInsets.all(16),
-    children: [
-      const Text('LỊCH QUY ĐÀI XỔ SỐ MIỀN NAM', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-      const SizedBox(height: 10),
-      _scheduleCard('Thứ Hai', ['TP. Hồ Chí Minh', 'Đồng Tháp', 'Cà Mau']),
-      _scheduleCard('Thứ Ba', ['Bến Tre', 'Vũng Tàu', 'Bạc Liêu']),
-      _scheduleCard('Thứ Tư', ['Đồng Nai', 'Cần Thơ', 'Sóc Trăng']),
-      _scheduleCard('Thứ Năm', ['Tây Ninh', 'An Giang', 'Bình Thuận']),
-      _scheduleCard('Thứ Sáu', ['Vĩnh Long', 'Bình Dương', 'Trà Vinh']),
-      _scheduleCard('Thứ Bảy', ['TP. Hồ Chí Minh', 'Long An', 'Bình Phước', 'Hậu Giang']),
-      _scheduleCard('Chủ Nhật', ['Tiền Giang', 'Kiên Giang', 'Đà Lạt']),
-    ],
-  );
-
-  Widget _scheduleCard(String day, List<String> provinces) => Card(
-    margin: const EdgeInsets.only(bottom: 10),
-    child: ListTile(
-      leading: CircleAvatar(backgroundColor: const Color(0xFFFFE5E5), child: Text(day.substring(day.length - 2), style: const TextStyle(color: brandRed, fontWeight: FontWeight.bold, fontSize: 12))),
-      title: Text(day, style: const TextStyle(fontWeight: FontWeight.bold)),
-      subtitle: Text('Đài: ${provinces.join(', ')}', style: const TextStyle(fontSize: 12, color: Colors.black87)),
-    ),
-  );
-
-  // Tab Dò vé thông minh mới: Chọn ngày, chọn đài, nhập số
   Widget smartTicketPage() => ListView(
     padding: const EdgeInsets.all(16),
     children: [
@@ -220,7 +194,6 @@ class _HomePageState extends State<HomePage> {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            // 1. Chọn Ngày
             const Text('1. Chọn ngày mở thưởng', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87)),
             const SizedBox(height: 6),
             InkWell(
@@ -246,8 +219,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 14),
-
-            // 2. Chọn Tỉnh Đài
             const Text('2. Chọn đài xổ số', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87)),
             const SizedBox(height: 6),
             Container(
@@ -263,8 +234,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 14),
-
-            // 3. Nhập Dãy Số
             const Text('3. Nhập dãy số trên vé (từ 2 đến 6 chữ số)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87)),
             const SizedBox(height: 6),
             TextField(
@@ -280,8 +249,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 16),
-
-            // Nút bấm Dò kết quả
             SizedBox(
               width: double.infinity,
               height: 48,
@@ -309,13 +276,37 @@ class _HomePageState extends State<HomePage> {
     ],
   );
 
+  Widget infoPage() => ListView(
+    padding: const EdgeInsets.all(16),
+    children: [
+      const Text('LỊCH QUY ĐÀI XỔ SỐ MIỀN NAM', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+      const SizedBox(height: 10),
+      _scheduleCard('Thứ Hai', ['TP. Hồ Chí Minh', 'Đồng Tháp', 'Cà Mau']),
+      _scheduleCard('Thứ Ba', ['Bến Tre', 'Vũng Tàu', 'Bạc Liêu']),
+      _scheduleCard('Thứ Tư', ['Đồng Nai', 'Cần Thơ', 'Sóc Trăng']),
+      _scheduleCard('Thứ Năm', ['Tây Ninh', 'An Giang', 'Bình Thuận']),
+      _scheduleCard('Thứ Sáu', ['Vĩnh Long', 'Bình Dương', 'Trà Vinh']),
+      _scheduleCard('Thứ Bảy', ['TP. Hồ Chí Minh', 'Long An', 'Bình Phước', 'Hậu Giang']),
+      _scheduleCard('Chủ Nhật', ['Tiền Giang', 'Kiên Giang', 'Đà Lạt']),
+    ],
+  );
+
+  Widget _scheduleCard(String day, List<String> provinces) => Card(
+    margin: const EdgeInsets.only(bottom: 10),
+    child: ListTile(
+      leading: CircleAvatar(backgroundColor: const Color(0xFFFFE5E5), child: Text(day.substring(day.length - 2), style: const TextStyle(color: brandRed, fontWeight: FontWeight.bold, fontSize: 12))),
+      title: Text(day, style: const TextStyle(fontWeight: FontWeight.bold)),
+      subtitle: Text('Đài: ${provinces.join(', ')}', style: const TextStyle(fontSize: 12, color: Colors.black87)),
+    ),
+  );
+
   Widget settingsPage() => ListView(
     padding: const EdgeInsets.all(16),
     children: [
       const Text('CÀI ĐẶT', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
       const SizedBox(height: 12),
       const Card(child: ListTile(leading: Icon(Icons.verified, color: brandRed), title: Text('Nguồn dữ liệu trực tuyến'), subtitle: Text('Đồng bộ thời gian thực chuẩn xác 100% từ xsmn.mobi'))),
-      Card(child: const ListTile(leading: Icon(Icons.verified_user_outlined, color: brandRed), title: Text('Phiên bản ứng dụng'), subtitle: Text('Xổ Số • v2.2 Pro'))),
+      Card(child: const ListTile(leading: Icon(Icons.verified_user_outlined, color: brandRed), title: Text('Phiên bản ứng dụng'), subtitle: Text('Dò số • v2.3 Pro'))),
     ],
   );
 }
