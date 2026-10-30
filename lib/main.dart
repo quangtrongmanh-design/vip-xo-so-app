@@ -107,20 +107,18 @@ class _HomePageState extends State<HomePage> {
     List<String> prize6List = ['0159', '7500', '7146'];
     List<String> prize1List = [specialPrize.substring(1)];
 
+    // 1. Kiểm tra Giải Đặc Biệt (Trùng khớp 6 số)
     if (ticket == specialPrize) {
       wonPrizes.add('🏆 TRÚNG GIẢI ĐẶC BIỆT: 2.000.000.000đ');
       totalMoney += 2000000000;
-    } else {
-      int diffCount = 0;
-      for (int i = 0; i < 6; i++) {
-        if (ticket[i] != specialPrize[i]) diffCount++;
-      }
-      if (diffCount == 1) {
-        wonPrizes.add('⭐ Trúng Giải AN ỦI: 50.000.000đ');
-        totalMoney += 50000000;
-      }
+    } 
+    // 2. Kiểm tra Giải Phụ Đặc Biệt (Trùng 5 số cuối, sai số hàng trăm ngàn - chữ số đầu tiên)
+    else if (ticket.substring(1) == specialPrize.substring(1) && ticket[0] != specialPrize[0]) {
+      wonPrizes.add('⭐ Trúng Giải Phụ Đặc Biệt (Sai số hàng trăm ngàn): 50.000.000đ');
+      totalMoney += 50000000;
     }
 
+    // 3. Quét 5 số cuối (Giải Nhất)
     String tail5 = ticket.substring(1);
     for (var p1 in prize1List) {
       if (tail5 == p1 || ticket.endsWith(p1)) {
@@ -130,6 +128,7 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
+    // 4. Quét 4 số cuối (Giải Sáu)
     String tail4 = ticket.substring(2);
     for (var p6 in prize6List) {
       if (tail4 == p6 || ticket.endsWith(p6)) {
@@ -139,12 +138,14 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
+    // 5. Quét 3 số cuối (Giải Bảy)
     String tail3 = ticket.substring(3);
     if (tail3 == prize7 || ticket.endsWith(prize7)) {
       wonPrizes.add('🥉 Trúng Giải Bảy: 1.000.000đ');
       totalMoney += 1000000;
     }
 
+    // 6. Quét 2 số cuối (Giải Tám)
     String tail2 = ticket.substring(4);
     if (tail2 == prize8 || ticket.endsWith(prize8)) {
       wonPrizes.add('✨ Trúng Giải Tám: 100.000đ');
@@ -236,7 +237,6 @@ class _HomePageState extends State<HomePage> {
 
   Widget resultsWebPage() => WebViewWidget(controller: webController);
 
-  // Màn hình Dò ngay được thiết kế tối ưu vừa khít 1 màn hình, không cần cuộn
   Widget smartTicketPage() {
     List<String> availableProvinces = getProvincesForDate(selectedDate);
     if (!availableProvinces.contains(selectedProvince)) {
@@ -391,7 +391,7 @@ class _HomePageState extends State<HomePage> {
       const Text('CÀI ĐẶT', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
       const SizedBox(height: 10),
       const Card(child: ListTile(dense: true, leading: Icon(Icons.verified, color: brandRed, size: 20), title: Text('Nguồn dữ liệu', style: TextStyle(fontSize: 13)), subtitle: Text('Đồng bộ 100% từ xsmn.mobi', style: TextStyle(fontSize: 11)))),
-      Card(child: const ListTile(dense: true, leading: Icon(Icons.verified_user_outlined, color: brandRed, size: 20), title: Text('Phiên bản', style: TextStyle(fontSize: 13)), subtitle: Text('Dò số • v3.2 Pro (Gọn trong 1 màn hình)', style: TextStyle(fontSize: 11)))),
+      Card(child: const ListTile(dense: true, leading: Icon(Icons.verified_user_outlined, color: brandRed, size: 20), title: Text('Phiên bản', style: TextStyle(fontSize: 13)), subtitle: Text('Dò số • v3.3 Pro (Chuẩn Giải Phụ Đặc Biệt)', style: TextStyle(fontSize: 11)))),
     ],
   );
 }
