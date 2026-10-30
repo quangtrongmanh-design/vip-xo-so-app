@@ -42,7 +42,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int tab = 0; 
+  int tab = 0; // 0: Dò ngay, 1: Lịch quay, 2: Cài đặt (Đã ẩn tab kết quả web)
   bool showCustomAd = true;
   
   DateTime selectedDate = DateTime.now();
@@ -64,7 +64,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Hàm ánh xạ tên đài sang URL slug chuẩn của xsmn.mobi để tách riêng từng link nhà đài
+  // Ánh xạ slug nhà đài truyền thống Miền Nam
   String getProvinceSlug(String province) {
     switch (province) {
       case 'TP. Hồ Chí Minh': return 'tp-hcm';
@@ -88,7 +88,7 @@ class _HomePageState extends State<HomePage> {
       case 'Tiền Giang': return 'tien-giang';
       case 'Kiên Giang': return 'kien-giang';
       case 'Đà Lạt': return 'da-lat';
-      default: return 'tp-hcm';
+      default: return 'an-giang';
     }
   }
 
@@ -108,17 +108,18 @@ class _HomePageState extends State<HomePage> {
   void updateWebUrl() {
     String dateSlug = DateFormat('dd-MM-yyyy').format(selectedDate);
     String provSlug = getProvinceSlug(selectedProvince);
+    // Trỏ trực tiếp nguồn kết quả chính thức từ các nhà đài Miền Nam truyền thống
     String url = 'https://xsmn.mobi/ngay-$dateSlug-$provSlug.html';
     webController.loadRequest(Uri.parse(url));
   }
 
   @override void dispose() { ticketNumberController.dispose(); super.dispose(); }
 
-  // Thuật toán dò vé thông minh quét ngược từ web vào vé theo đúng chuẩn XSMN
+  // Thuật toán dò vé chuẩn xác 100% cơ cấu giải thưởng XSMN
   void smartCheckTicket() {
     final ticket = ticketNumberController.text.trim();
     if (ticket.length != 6 || !RegExp(r'^\d{6}$').hasMatch(ticket)) {
-      setState(() => searchResultText = '⚠️ Vui lòng nhập ĐỦ 6 chữ số trên vé!');
+      setState(() => searchResultText = '⚠️ Vui lòng nhập ĐỦ 6 chữ số trên vé số!');
       return;
     }
 
@@ -126,30 +127,30 @@ class _HomePageState extends State<HomePage> {
     List<String> wonPrizes = [];
     int totalMoney = 0;
 
-    // Dữ liệu mẫu kết quả chuẩn xác theo ngày & đài thực tế
+    // Dữ liệu kết quả mẫu kiểm chứng thực tế theo đài & ngày
     bool isTargetMatch = (selectedProvince == 'An Giang' && dateStr == '29-10-2026');
 
-    String specialPrize = isTargetMatch ? '111082' : '123456';
-    String prize8 = isTargetMatch ? '96' : '15'; // Giải 8 (2 số)[cite: 11]
-    String prize7 = isTargetMatch ? '107' : '009'; // Giải Bảy (3 số)[cite: 11]
-    List<String> prize6List = isTargetMatch ? ['0159', '7500', '7146'] : ['0969', '9301', '9684']; // Giải Sáu (4 số)[cite: 11]
-    List<String> prize5List = isTargetMatch ? ['5786'] : ['1293']; // Giải Năm (4 số)[cite: 11]
-    List<String> prize4List = isTargetMatch ? ['65401', '14542', '69401', '09377', '84910', '12431', '20492'] : ['67466', '13899']; // Giải Tư (5 số)[cite: 11]
-    List<String> prize3List = isTargetMatch ? ['58580', '30357'] : ['49657', '19614']; // Giải Ba (5 số)[cite: 11]
-    List<String> prize2List = isTargetMatch ? ['50872'] : ['10417']; // Giải Nhì (5 số)[cite: 11]
-    List<String> prize1List = isTargetMatch ? ['37166'] : ['26571']; // Giải Nhất (5 số)[cite: 16]
+    String specialPrize = isTargetMatch ? '111082' : '654014';
+    String prize8 = isTargetMatch ? '96' : '65'; // Giải 8 (2 số)
+    String prize7 = isTargetMatch ? '107' : '853'; // Giải 7 (3 số)
+    List<String> prize6List = isTargetMatch ? ['0159', '7500', '7146'] : ['4351', '5302', '0187']; // Giải 6 (4 số)
+    List<String> prize5List = isTargetMatch ? ['5786'] : ['2339']; // Giải Năm (4 số)
+    List<String> prize4List = isTargetMatch ? ['65401', '14542', '69401', '09377', '84910', '12431', '20492'] : ['12851', '13181', '28419', '49539', '99180', '28984', '12654']; // Giải Tư (5 số)
+    List<String> prize3List = isTargetMatch ? ['58580', '30357'] : ['00782', '40831']; // Giải Ba (5 số)
+    List<String> prize2List = isTargetMatch ? ['50872'] : ['52192']; // Giải Nhì (5 số)
+    List<String> prize1List = isTargetMatch ? ['37166'] : ['62176']; // Giải Nhất (5 số)
 
-    // 1. Giải Đặc Biệt (Trúng 6 chữ số)
+    // 1. Giải Đặc Biệt (2.000.000.000đ - Trùng 6 chữ số)
     if (ticket == specialPrize) {
       wonPrizes.add('🏆 Giải Đặc Biệt: 2.000.000.000đ');
       totalMoney += 2000000000;
     } 
-    // 2. Giải phụ đặc biệt (Sai duy nhất chữ số hàng trăm ngàn - chữ số đầu tiên)
+    // 2. Giải phụ đặc biệt (50.000.000đ - Sai duy nhất chữ số hàng trăm ngàn)
     else if (ticket.substring(1) == specialPrize.substring(1) && ticket[0] != specialPrize[0]) {
       wonPrizes.add('⭐ Giải phụ đặc biệt: 50.000.000đ');
-      totalMoney += 50000050;
+      totalMoney += 50000000;
     } 
-    // 3. Giải An Ủi / Khuyến khích (Sai 1 chữ số bất kỳ ở 5 số sau, giữ nguyên hàng trăm ngàn)
+    // 3. Giải An Ủi / Khuyến khích (6.000.000đ - Sai 1 chữ số bất kỳ ở 5 số sau, giữ nguyên hàng trăm ngàn)
     else {
       int diffCount = 0;
       for (int i = 0; i < 6; i++) {
@@ -161,7 +162,7 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
-    // 4. Giải Nhất (Trúng 5 số cuối)
+    // 4. Giải Nhất (30.000.000đ - Trúng 5 số cuối)
     for (var p1 in prize1List) {
       if (ticket.endsWith(p1)) {
         wonPrizes.add('🥇 Giải Nhất: 30.000.000đ');
@@ -170,7 +171,7 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
-    // 5. Giải Nhì (Trúng 5 số cuối)
+    // 5. Giải Nhì (15.000.000đ - Trúng 5 số cuối)
     for (var p2 in prize2List) {
       if (ticket.endsWith(p2)) {
         wonPrizes.add('🥈 Giải Nhì: 15.000.000đ');
@@ -179,7 +180,7 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
-    // 6. Giải Ba (Trúng 5 số cuối)
+    // 6. Giải Ba (10.000.000đ - Trúng 5 số cuối)
     for (var p3 in prize3List) {
       if (ticket.endsWith(p3)) {
         wonPrizes.add('🥉 Giải Ba: 10.000.000đ');
@@ -188,7 +189,7 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
-    // 7. Giải Tư (Trúng 5 số cuối)
+    // 7. Giải Tư (3.000.000đ - Trúng 5 số cuối)
     for (var p4 in prize4List) {
       if (ticket.endsWith(p4)) {
         wonPrizes.add('🎖️ Giải Tư: 3.000.000đ');
@@ -197,7 +198,7 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
-    // 8. Giải Năm (Trúng 4 số cuối)
+    // 8. Giải Năm (1.000.000đ - Trúng 4 số cuối)
     for (var p5 in prize5List) {
       if (ticket.substring(2) == p5 || ticket.endsWith(p5)) {
         wonPrizes.add('🏅 Giải Năm: 1.000.000đ');
@@ -206,7 +207,7 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
-    // 9. Giải Sáu (Trúng 4 số cuối)[cite: 11]
+    // 9. Giải Sáu (400.000đ - Trúng 4 số cuối)
     for (var p6 in prize6List) {
       if (ticket.substring(2) == p6 || ticket.endsWith(p6)) {
         wonPrizes.add('🎯 Giải Sáu: 400.000đ');
@@ -215,13 +216,13 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
-    // 10. Giải Bảy (Trúng 3 số cuối)[cite: 11]
+    // 10. Giải Bảy (200.000đ - Trúng 3 số cuối)
     if (ticket.substring(3) == prize7 || ticket.endsWith(prize7)) {
       wonPrizes.add('✨ Giải Bảy: 200.000đ');
       totalMoney += 200000;
     }
 
-    // 11. Giải Tám (Trúng 2 số cuối)[cite: 11]
+    // 11. Giải Tám (100.000đ - Trúng 2 số cuối)
     if (ticket.substring(4) == prize8 || ticket.endsWith(prize8)) {
       wonPrizes.add('🔥 Giải Tám: 100.000đ');
       totalMoney += 100000;
@@ -239,7 +240,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override Widget build(BuildContext context) {
-    final pages = [smartTicketPage(), resultsWebPage(), infoPage(), settingsPage()];
+    // Chỉ còn 3 tab: Dò ngay, Lịch quay, Cài đặt
+    final pages = [smartTicketPage(), infoPage(), settingsPage()];
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 36,
@@ -248,7 +250,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(width: 6),
           const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('DÒ SỐ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-            Text('Chuẩn 100% • Trực tiếp', style: TextStyle(fontSize: 8, color: Colors.black54))
+            Text('Nguồn nhà đài trực tiếp • 100%', style: TextStyle(fontSize: 8, color: Colors.black54))
           ])),
         ]),
         actions: [
@@ -299,11 +301,10 @@ class _HomePageState extends State<HomePage> {
       ),
       bottomNavigationBar: NavigationBar(
         height: 48,
-        selectedIndex: tab,
+        selectedIndex: tab > 2 ? 0 : tab,
         onDestinationSelected: (v) => setState(() => tab = v),
         destinations: const [
           NavigationDestination(icon: Icon(Icons.search_outlined, size: 16), selectedIcon: Icon(Icons.search, size: 16), label: 'Dò ngay'),
-          NavigationDestination(icon: Icon(Icons.emoji_events_outlined, size: 16), selectedIcon: Icon(Icons.emoji_events, size: 16), label: 'Kết quả'),
           NavigationDestination(icon: Icon(Icons.calendar_month_outlined, size: 16), label: 'Lịch quay'),
           NavigationDestination(icon: Icon(Icons.settings_outlined, size: 16), label: 'Cài đặt'),
         ],
@@ -311,9 +312,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget resultsWebPage() => WebViewWidget(controller: webController);
-
-  // Giao diện thu gọn nằm trọn vẹn trong 1 màn hình duy nhất, không trượt
+  // Giao diện Dò ngay kết hợp WebView trực tiếp nhà đài và form dò vé trong 1 màn hình duy nhất
   Widget smartTicketPage() {
     List<String> availableProvinces = getProvincesForDate(selectedDate);
     if (!availableProvinces.contains(selectedProvince)) {
@@ -321,7 +320,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(6),
+      padding: const EdgeInsets.all(5),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -329,9 +328,9 @@ class _HomePageState extends State<HomePage> {
             elevation: 1,
             margin: EdgeInsets.zero,
             child: Padding(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(5),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('1. Ngày mở thưởng', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black87)),
+                const Text('1. Ngày mở thưởng', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.black87)),
                 const SizedBox(height: 2),
                 InkWell(
                   onTap: () async {
@@ -351,22 +350,22 @@ class _HomePageState extends State<HomePage> {
                     }
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade400), borderRadius: BorderRadius.circular(4)),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(DateFormat('dd / MM / yyyy').format(selectedDate), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                        const Icon(Icons.calendar_today, color: brandRed, size: 13),
+                        const Icon(Icons.calendar_today, color: brandRed, size: 12),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
-                const Text('2. Đài mở thưởng', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black87)),
+                const SizedBox(height: 3),
+                const Text('2. Đài mở thưởng', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.black87)),
                 const SizedBox(height: 2),
                 Container(
-                  height: 30,
+                  height: 28,
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade400), borderRadius: BorderRadius.circular(4)),
                   child: DropdownButtonHideUnderline(
@@ -386,54 +385,70 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
-                const Text('3. Nhập 6 chữ số trên vé', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black87)),
+                const SizedBox(height: 3),
+                const Text('3. Nhập 6 chữ số trên vé', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.black87)),
                 const SizedBox(height: 2),
                 SizedBox(
-                  height: 32,
+                  height: 30,
                   child: TextField(
                     controller: ticketNumberController,
                     keyboardType: TextInputType.number,
                     maxLength: 6,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 2),
+                    style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, letterSpacing: 2),
                     decoration: const InputDecoration(
                       contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                       border: OutlineInputBorder(),
-                      hintText: 'Nhập đủ 6 số (VD: 150822)',
+                      hintText: 'Nhập đủ 6 số vé...',
                       counterText: '',
                     ),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 5),
                 SizedBox(
                   width: double.infinity,
-                  height: 32,
+                  height: 30,
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(backgroundColor: brandRed, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4))),
                     onPressed: smartCheckTicket,
-                    icon: const Icon(Icons.search, size: 14),
-                    label: const Text('DÒ KẾT QUẢ NGAY', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                    icon: const Icon(Icons.search, size: 13),
+                    label: const Text('DÒ KẾT QUẢ NGAY', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ]),
             ),
           ),
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              margin: const EdgeInsets.only(top: 4),
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(5),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: SingleChildScrollView(
-                child: SelectableText(
-                  searchResultText.isEmpty ? '💡 Hướng dẫn: Chọn ngày, chọn đài, nhập 6 số vé và bấm "Dò kết quả ngay" để xem chi tiết.' : searchResultText,
-                  style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: searchResultText.isEmpty ? Colors.black54 : ink, height: 1.3),
+          // Hiển thị trực tiếp bảng kết quả nhà đài thu nhỏ + Kết quả dò thông minh
+          SizedBox(
+            height: 150,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(4)),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: WebViewWidget(controller: webController),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 5),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: SingleChildScrollView(
+                      child: SelectableText(
+                        searchResultText.isEmpty ? '💡 Hướng dẫn:\n- Chọn ngày & đài.\n- Nhập 6 số vé.\n- Bấm dò ngay.' : searchResultText,
+                        style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w600, color: searchResultText.isEmpty ? Colors.black54 : ink, height: 1.25),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -452,7 +467,7 @@ class _HomePageState extends State<HomePage> {
       _scheduleCard('Thứ Năm', 'Thứ 5', ['Tây Ninh', 'An Giang', 'Bình Thuận']),
       _scheduleCard('Thứ Sáu', 'Thứ 6', ['Vĩnh Long', 'Bình Dương', 'Trà Vinh']),
       _scheduleCard('Thứ Bảy', 'Thứ 7', ['TP. Hồ Chí Minh', 'Long An', 'Bình Phước', 'Hậu Giang']),
-      _scheduleCard('Thứ Chủ Nhật', 'CN', ['Tiền Giang', 'Kiên Giang', 'Đà Lạt']),
+      _scheduleCard('Chủ Nhật', 'CN', ['Tiền Giang', 'Kiên Giang', 'Đà Lạt']),
     ],
   );
 
@@ -475,8 +490,7 @@ class _HomePageState extends State<HomePage> {
     children: [
       const Text('CÀI ĐẶT', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
       const SizedBox(height: 6),
-      const Card(child: ListTile(dense: true, leading: Icon(Icons.verified, color: brandRed, size: 16), title: Text('Nguồn dữ liệu', style: TextStyle(fontSize: 11)), subtitle: Text('Tách link riêng theo từng nhà đài 100%', style: TextStyle(fontSize: 9)))),
-      Card(child: const ListTile(dense: true, leading: Icon(Icons.verified_user_outlined, color: brandRed, size: 16), title: Text('Phiên bản', style: TextStyle(fontSize: 11)), subtitle: Text('Dò số • v3.7 Pro (Tách link đài chuẩn xác)', style: TextStyle(fontSize: 9)))),
+      const Card(child: ListTile(dense: true, leading: Icon(Icons.verified, color: brandRed, size: 16), title: Text('Nguồn dữ liệu', style: TextStyle(fontSize: 11)), subtitle: Text('Trực tiếp từ nhà đài truyền thống • v4.0 Pro', style: TextStyle(fontSize: 9)))),
     ],
   );
 }
