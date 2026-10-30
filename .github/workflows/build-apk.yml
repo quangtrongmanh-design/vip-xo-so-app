@@ -41,6 +41,11 @@ jobs:
 
           sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle || true
 
+          # Thêm cấu hình repositories phụ phòng lỗi 403 maven
+          if [ -f "android/build.gradle" ]; then
+            sed -i '/repositories {/a \    google()\n    mavenCentral()' android/build.gradle || true
+          fi
+
           flutter pub get
           flutter build apk --debug --no-tree-shake-icons
 
