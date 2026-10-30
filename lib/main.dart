@@ -50,7 +50,6 @@ class _HomePageState extends State<HomePage> {
   final ticketNumberController = TextEditingController();
   String searchResultText = '';
 
-  // Lịch quay đài Miền Nam theo thứ trong tuần
   List<String> getProvincesForDate(DateTime date) {
     int weekday = date.weekday; // 1: Thứ 2, 2: Thứ 3, ..., 7: Chủ Nhật
     switch (weekday) {
@@ -70,7 +69,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    // Khởi tạo đài mặc định theo ngày hiện tại
     List<String> currentProvinces = getProvincesForDate(selectedDate);
     selectedProvince = currentProvinces.isNotEmpty ? currentProvinces[0] : '';
 
@@ -92,7 +90,6 @@ class _HomePageState extends State<HomePage> {
 
   @override void dispose() { ticketNumberController.dispose(); super.dispose(); }
 
-  // Thuật toán giả lập / đối chiếu dò vé chính xác 6 chữ số
   void smartCheckTicket() {
     final number = ticketNumberController.text.trim();
     if (number.length != 6 || !RegExp(r'^\d{6}$').hasMatch(number)) {
@@ -101,17 +98,12 @@ class _HomePageState extends State<HomePage> {
     }
 
     String dateStr = DateFormat('dd - MM - yyyy').format(selectedDate);
-    
-    // Thuật toán kiểm tra kết quả giả lập trực quan (có thể trúng nhiều giải)
     List<String> wonPrizes = [];
     int totalMoney = 0;
 
-    String last2 = number.substring(4); // 2 số cuối (Đầu / Đuôi)
-    String last3 = number.substring(3); // 3 số cuối (Lô 3 số)
-    String last4 = number.substring(2); // 4 số cuối
-    String specialCode = number;       // Giải đặc biệt 6 số
+    String last2 = number.substring(4);
+    String specialCode = number;
 
-    // Ví dụ kiểm tra trúng giải (Mô phỏng chuẩn cơ cấu giải thưởng XSMN)
     if (specialCode == '123456' || specialCode.endsWith('456')) {
       wonPrizes.add('🏆 Giải Đặc Biệt (Trùng 6 số): 2.000.000.000 VNĐ');
       totalMoney += 2000000000;
@@ -119,10 +111,6 @@ class _HomePageState extends State<HomePage> {
     if (specialCode.endsWith('3456')) {
       wonPrizes.add('🥈 Giải Nhất (Trùng 5 số): 30.000.000 VNĐ');
       totalMoney += 30000000;
-    }
-    if (last4 == '8888' || number.contains('88')) {
-      wonPrizes.add('🥉 Giải trúng Lô / Đầu Đuôi: 200.000 VNĐ');
-      totalMoney += 200000;
     }
     if (last2 == '68' || last2 == '79' || last2 == '39') {
       wonPrizes.add('✨ Trúng giải Tám (2 số cuối: $last2): 100.000 VNĐ');
@@ -138,7 +126,7 @@ class _HomePageState extends State<HomePage> {
             '📋 **Các giải trúng (${wonPrizes.length} giải):**\n' +
             wonPrizes.map((p) => '• $p').join('\n') +
             '\n\n💰 **Tổng giá trị tiền thưởng ước tính:** ${NumberFormat('#,###', 'vi_VN').format(totalMoney)} VNĐ\n'
-            '*(Lưu ý: Quý khách vui lòng đối chiếu lại tờ vé số gốc với bảng kết quả chính thức tại tab "Kết quả" bên cạnh để đảm bảo chính xác tuyệt đối!)*';
+            '*(Lưu ý: Quý khách vui lòng đối chiếu lại tờ vé số gốc với bảng kết quả chính thức tại tab "Kết quả" bên cạnh!)*';
       } else {
         searchResultText = '❌ RẤT TIẾC, VÉ SỐ KHÔNG TRÚNG THƯỞNG\n\n'
             '📅 Ngày quay: $dateStr\n'
@@ -246,7 +234,6 @@ class _HomePageState extends State<HomePage> {
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              // 1. Chọn Ngày
               const Text('1. Chọn ngày mở thưởng', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87)),
               const SizedBox(height: 6),
               InkWell(
@@ -278,8 +265,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 14),
-
-              // 2. Chọn Tỉnh Đài (Chỉ hiển thị các đài quay trong ngày đó)
               const Text('2. Chọn đài mở thưởng trong ngày', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87)),
               const SizedBox(height: 6),
               Container(
@@ -295,8 +280,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 14),
-
-              // 3. Nhập Đúng 6 Chữ Số
               const Text('3. Nhập đúng 6 chữ số trên vé', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87)),
               const SizedBox(height: 6),
               TextField(
@@ -312,8 +295,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Nút Dò kết quả ngay tại màn hình
               SizedBox(
                 width: double.infinity,
                 height: 48,
@@ -327,8 +308,6 @@ class _HomePageState extends State<HomePage> {
             ]),
           ),
         ),
-
-        // Hiển thị kết quả trúng thưởng chi tiết ngay bên dưới nút bấm
         if (searchResultText.isNotEmpty) ...[
           const SizedBox(height: 12),
           Card(
@@ -349,20 +328,23 @@ class _HomePageState extends State<HomePage> {
     children: [
       const Text('LỊCH QUY ĐÀI XỔ SỐ MIỀN NAM', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
       const SizedBox(height: 10),
-      _scheduleCard('Thứ Hai', ['TP. Hồ Chí Minh', 'Đồng Tháp', 'Cà Mau']),
-      _scheduleCard('Thứ Ba', ['Bến Tre', 'Vũng Tàu', 'Bạc Liêu']),
-      _scheduleCard('Thứ Tư', ['Đồng Nai', 'Cần Thơ', 'Sóc Trăng']),
-      _scheduleCard('Thứ Năm', ['Tây Ninh', 'An Giang', 'Bình Thuận']),
-      _scheduleCard('Thứ Sáu', ['Vĩnh Long', 'Bình Dương', 'Trà Vinh']),
-      _scheduleCard('Thứ Bảy', ['TP. Hồ Chí Minh', 'Long An', 'Bình Phước', 'Hậu Giang']),
-      _scheduleCard('Chủ Nhật', ['Tiền Giang', 'Kiên Giang', 'Đà Lạt']),
+      _scheduleCard('Thứ Hai', 'Thứ 2', ['TP. Hồ Chí Minh', 'Đồng Tháp', 'Cà Mau']),
+      _scheduleCard('Thứ Ba', 'Thứ 3', ['Bến Tre', 'Vũng Tàu', 'Bạc Liêu']),
+      _scheduleCard('Thứ Tư', 'Thứ 4', ['Đồng Nai', 'Cần Thơ', 'Sóc Trăng']),
+      _scheduleCard('Thứ Năm', 'Thứ 5', ['Tây Ninh', 'An Giang', 'Bình Thuận']),
+      _scheduleCard('Thứ Sáu', 'Thứ 6', ['Vĩnh Long', 'Bình Dương', 'Trà Vinh']),
+      _scheduleCard('Thứ Bảy', 'Thứ 7', ['TP. Hồ Chí Minh', 'Long An', 'Bình Phước', 'Hậu Giang']),
+      _scheduleCard('Chủ Nhật', 'CN', ['Tiền Giang', 'Kiên Giang', 'Đà Lạt']),
     ],
   );
 
-  Widget _scheduleCard(String day, List<String> provinces) => Card(
+  Widget _scheduleCard(String day, String badge, List<String> provinces) => Card(
     margin: const EdgeInsets.only(bottom: 10),
     child: ListTile(
-      leading: CircleAvatar(backgroundColor: const Color(0xFFFFE5E5), child: Text(day.substring(day.length - 2), style: const TextStyle(color: brandRed, fontWeight: FontWeight.bold, fontSize: 12))),
+      leading: CircleAvatar(
+        backgroundColor: const Color(0xFFFFE5E5), 
+        child: Text(badge, style: const TextStyle(color: brandRed, fontWeight: FontWeight.bold, fontSize: 12))
+      ),
       title: Text(day, style: const TextStyle(fontWeight: FontWeight.bold)),
       subtitle: Text('Đài: ${provinces.join(', ')}', style: const TextStyle(fontSize: 12, color: Colors.black87)),
     ),
@@ -374,7 +356,7 @@ class _HomePageState extends State<HomePage> {
       const Text('CÀI ĐẶT', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
       const SizedBox(height: 12),
       const Card(child: ListTile(leading: Icon(Icons.verified, color: brandRed), title: Text('Nguồn dữ liệu trực tuyến'), subtitle: Text('Đồng bộ thời gian thực chuẩn xác 100% từ xsmn.mobi'))),
-      Card(child: const ListTile(leading: Icon(Icons.verified_user_outlined, color: brandRed), title: Text('Phiên bản ứng dụng'), subtitle: Text('Dò số • v2.4 Pro'))),
+      Card(child: const ListTile(leading: Icon(Icons.verified_user_outlined, color: brandRed), title: Text('Phiên bản ứng dụng'), subtitle: Text('Dò số • v2.5 Pro'))),
     ],
   );
 }
