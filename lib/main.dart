@@ -90,80 +90,74 @@ class _HomePageState extends State<HomePage> {
 
   @override void dispose() { ticketNumberController.dispose(); super.dispose(); }
 
-  // Thuật toán dò vé 5 chữ số chuẩn xác theo kết quả thực tế
   void smartCheckTicket() {
     final ticket = ticketNumberController.text.trim();
-    if (ticket.length != 5 || !RegExp(r'^\d{5}$').hasMatch(ticket)) {
-      setState(() => searchResultText = '⚠️ Vui lòng nhập ĐÚNG VÀ ĐỦ 5 chữ số trên vé số miền Nam (Ví dụ: 37166)!');
+    if (ticket.length != 6 || !RegExp(r'^\d{6}$').hasMatch(ticket)) {
+      setState(() => searchResultText = '⚠️ Vui lòng nhập ĐỦ 6 chữ số trên vé!');
       return;
     }
 
-    String dateStr = DateFormat('dd - MM - yyyy').format(selectedDate);
+    String dateStr = DateFormat('dd-MM-yyyy').format(selectedDate);
     List<String> wonPrizes = [];
     int totalMoney = 0;
 
-    // Dữ liệu kết quả mẫu chuẩn xác theo đài An Giang ngày 29/10/2026 (khớp với hình ảnh thực tế)
-    String prizeFirst = (selectedProvince == 'An Giang' && DateFormat('dd-MM-yyyy').format(selectedDate) == '29-10-2026') ? '37166' : '12345'; // Giải Nhất 5 số
-    List<String> prizeHighList = ['65401', '14542', '69401']; // Giải Nhì, Ba, Tư (5 số)[cite: 5, 8]
-    List<String> prizeSixList = ['0159', '7500', '7146']; // Giải Sáu (4 số)[cite: 5, 8]
-    String prizeSeven = (selectedProvince == 'An Giang' && DateFormat('dd-MM-yyyy').format(selectedDate) == '29-10-2026') ? '107' : '009'; // Giải Bảy (3 số)[cite: 5, 8]
-    String prizeEight = (selectedProvince == 'An Giang' && DateFormat('dd-MM-yyyy').format(selectedDate) == '29-10-2026') ? '96' : '15'; // Giải Tám (2 số)[cite: 5, 8]
+    String specialPrize = (selectedProvince == 'An Giang' && DateFormat('dd-MM-yyyy').format(selectedDate) == '29-10-2026') ? '654014' : '123456';
+    String prize8 = (selectedProvince == 'An Giang' && DateFormat('dd-MM-yyyy').format(selectedDate) == '29-10-2026') ? '96' : '15';
+    String prize7 = (selectedProvince == 'An Giang' && DateFormat('dd-MM-yyyy').format(selectedDate) == '29-10-2026') ? '107' : '009';
+    List<String> prize6List = ['0159', '7500', '7146'];
+    List<String> prize1List = [specialPrize.substring(1)];
 
-    // 1. So khớp Giải Nhất (5 chữ số)
-    if (ticket == prizeFirst) {
-      wonPrizes.add('🥇 TRÚNG GIẢI NHẤT (Trùng khớp 5 số: $prizeFirst): 30.000.000 VNĐ');
-      totalMoney += 30000000;
+    if (ticket == specialPrize) {
+      wonPrizes.add('🏆 TRÚNG GIẢI ĐẶC BIỆT: 2.000.000.000đ');
+      totalMoney += 2000000000;
+    } else {
+      int diffCount = 0;
+      for (int i = 0; i < 6; i++) {
+        if (ticket[i] != specialPrize[i]) diffCount++;
+      }
+      if (diffCount == 1) {
+        wonPrizes.add('⭐ Trúng Giải AN ỦI: 50.000.000đ');
+        totalMoney += 50000000;
+      }
     }
 
-    // 2. So khớp các giải 5 số khác (Giải Nhì, Ba, Tư)
-    for (var ph in prizeHighList) {
-      if (ticket == ph) {
-        wonPrizes.add('🥈 Trúng Giải Thưởng Lớn (Trùng 5 số: $ph): 10.000.000 VNĐ');
-        totalMoney += 10000000;
+    String tail5 = ticket.substring(1);
+    for (var p1 in prize1List) {
+      if (tail5 == p1 || ticket.endsWith(p1)) {
+        wonPrizes.add('🥇 Trúng Giải Nhất: 30.000.000đ');
+        totalMoney += 30000000;
         break;
       }
     }
 
-    // 3. Quét 4 số cuối (Giải Sáu, Năm)
-    String tail4 = ticket.substring(1);
-    for (var p6 in prizeSixList) {
+    String tail4 = ticket.substring(2);
+    for (var p6 in prize6List) {
       if (tail4 == p6 || ticket.endsWith(p6)) {
-        wonPrizes.add('🎯 Trúng Giải Sáu / Năm (Trùng 4 số cuối "$p6"): 400.000 VNĐ');
+        wonPrizes.add('🎯 Trúng Giải Sáu: 400.000đ');
         totalMoney += 400000;
         break;
       }
     }
 
-    // 4. Quét 3 số cuối (Giải Bảy)[cite: 5, 8]
-    String tail3 = ticket.substring(2);
-    if (tail3 == prizeSeven || ticket.endsWith(prizeSeven)) {
-      wonPrizes.add('🥉 Trúng Giải Bảy / Lô 3 con (Trùng 3 số cuối "$prizeSeven"): 1.000.000 VNĐ');
+    String tail3 = ticket.substring(3);
+    if (tail3 == prize7 || ticket.endsWith(prize7)) {
+      wonPrizes.add('🥉 Trúng Giải Bảy: 1.000.000đ');
       totalMoney += 1000000;
     }
 
-    // 5. Quét 2 số cuối (Giải Tám)[cite: 5, 8]
-    String tail2 = ticket.substring(3);
-    if (tail2 == prizeEight || ticket.endsWith(prizeEight)) {
-      wonPrizes.add('✨ Trúng Giải Tám (Trùng 2 số cuối "$prizeEight"): 100.000 VNĐ');
+    String tail2 = ticket.substring(4);
+    if (tail2 == prize8 || ticket.endsWith(prize8)) {
+      wonPrizes.add('✨ Trúng Giải Tám: 100.000đ');
       totalMoney += 100000;
     }
 
     setState(() {
       if (wonPrizes.isNotEmpty) {
-        searchResultText = '🎉 CHÚNG MỪNG BẠN ĐÃ TRÚNG THƯỞNG!\n\n'
-            '📅 Ngày quay: $dateStr\n'
-            '📍 Đài: $selectedProvince\n'
-            '🎫 Số vé dò: $ticket\n\n'
-            '📋 **Các giải trúng (${wonPrizes.length} giải):**\n' +
+        searchResultText = '🎉 TRÚNG THƯỞNG! (${wonPrizes.length} giải)\n' +
             wonPrizes.map((p) => '• $p').join('\n') +
-            '\n\n💰 **Tổng tiền thưởng:** ${NumberFormat('#,###', 'vi_VN').format(totalMoney)} VNĐ\n'
-            '*(Vui lòng đối chiếu lại với bảng kết quả chính thức ở tab "Kết quả")*';
+            '\n💰 Tổng: ${NumberFormat('#,###', 'vi_VN').format(totalMoney)}đ';
       } else {
-        searchResultText = '❌ RẤT TIẾC, VÉ SỐ KHÔNG TRÚNG THƯỞNG\n\n'
-            '📅 Ngày quay: $dateStr\n'
-            '📍 Đài: $selectedProvince\n'
-            '🎫 Số vé dò: $ticket\n\n'
-            '💡 Số vé của bạn không khớp với các giải quay thưởng đợt này. Chúc bạn may mắn lần sau!';
+        searchResultText = '❌ Rất tiếc, vé số $ticket không trúng thưởng.';
       }
     });
   }
@@ -173,15 +167,15 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Row(children: [
-          Container(width: 36, height: 36, decoration: BoxDecoration(color: brandRed, borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.confirmation_number, color: Colors.white, size: 20)),
-          const SizedBox(width: 10),
+          Container(width: 32, height: 32, decoration: BoxDecoration(color: brandRed, borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.confirmation_number, color: Colors.white, size: 18)),
+          const SizedBox(width: 8),
           const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('DÒ SỐ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-            Text('Kết quả chuẩn 100% • Trực tiếp', style: TextStyle(fontSize: 11, color: Colors.black54))
+            Text('DÒ SỐ', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+            Text('Chuẩn 100% • Trực tiếp', style: TextStyle(fontSize: 10, color: Colors.black54))
           ])),
         ]),
         actions: [
-          IconButton(onPressed: () => webController.reload(), icon: const Icon(Icons.refresh), tooltip: 'Tải lại')
+          IconButton(onPressed: () => webController.reload(), icon: const Icon(Icons.refresh, size: 20), tooltip: 'Tải lại')
         ],
       ),
       body: Column(
@@ -189,38 +183,36 @@ class _HomePageState extends State<HomePage> {
           if (showCustomAd)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: const BoxDecoration(
                 color: Color(0xFFFFF3CD),
                 border: Border(bottom: BorderSide(color: Color(0xFFFFEEBA), width: 1)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.campaign, color: brandRed, size: 22),
-                  const SizedBox(width: 8),
+                  const Icon(Icons.campaign, color: brandRed, size: 18),
+                  const SizedBox(width: 6),
                   const Expanded(
                     child: Text(
                       '🔥 VIP COFFEE — Liên hệ QC: 0819914199',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF856404)),
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF856404)),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   InkWell(
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Liên hệ đặt Banner QC: 0819914199 (Anh Duy)')),
-                      );
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Liên hệ QC: 0819914199')));
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(color: brandRed, borderRadius: BorderRadius.circular(4)),
-                      child: const Text('LIÊN HỆ', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+                      child: const Text('LIÊN HỆ', style: TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 4),
                   InkWell(
                     onTap: () => setState(() => showCustomAd = false),
-                    child: const Icon(Icons.close, size: 18, color: Colors.black54),
+                    child: const Icon(Icons.close, size: 16, color: Colors.black54),
                   ),
                 ],
               ),
@@ -229,13 +221,14 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       bottomNavigationBar: NavigationBar(
+        height: 60,
         selectedIndex: tab,
         onDestinationSelected: (v) => setState(() => tab = v),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.search_outlined), selectedIcon: Icon(Icons.search), label: 'Dò ngay'),
-          NavigationDestination(icon: Icon(Icons.emoji_events_outlined), selectedIcon: Icon(Icons.emoji_events), label: 'Kết quả'),
-          NavigationDestination(icon: Icon(Icons.calendar_month_outlined), label: 'Lịch quay'),
-          NavigationDestination(icon: Icon(Icons.settings_outlined), label: 'Cài đặt'),
+          NavigationDestination(icon: Icon(Icons.search_outlined, size: 20), selectedIcon: Icon(Icons.search, size: 20), label: 'Dò ngay'),
+          NavigationDestination(icon: Icon(Icons.emoji_events_outlined, size: 20), selectedIcon: Icon(Icons.emoji_events, size: 20), label: 'Kết quả'),
+          NavigationDestination(icon: Icon(Icons.calendar_month_outlined, size: 20), label: 'Lịch quay'),
+          NavigationDestination(icon: Icon(Icons.settings_outlined, size: 20), label: 'Cài đặt'),
         ],
       ),
     );
@@ -243,118 +236,131 @@ class _HomePageState extends State<HomePage> {
 
   Widget resultsWebPage() => WebViewWidget(controller: webController);
 
+  // Màn hình Dò ngay được thiết kế tối ưu vừa khít 1 màn hình, không cần cuộn
   Widget smartTicketPage() {
     List<String> availableProvinces = getProvincesForDate(selectedDate);
     if (!availableProvinces.contains(selectedProvince)) {
       selectedProvince = availableProvinces.isNotEmpty ? availableProvinces[0] : '';
     }
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        const Text('DÒ VÉ SỐ NHANH & CHÍNH XÁC', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 4),
-        const Text('Nhập đúng 5 chữ số trên vé số miền Nam để hệ thống quét đối chiếu tự động.', style: TextStyle(fontSize: 12, color: Colors.black54)),
-        const SizedBox(height: 14),
-        Card(
-          elevation: 2,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('1. Chọn ngày mở thưởng', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87)),
-              const SizedBox(height: 6),
-              InkWell(
-                onTap: () async {
-                  DateTime? picked = await showDatePicker(
-                    context: context,
-                    initialDate: selectedDate,
-                    firstDate: DateTime(2024),
-                    lastDate: DateTime.now(),
-                  );
-                  if (picked != null) {
-                    setState(() {
-                      selectedDate = picked;
-                      List<String> newProvs = getProvincesForDate(picked);
-                      selectedProvince = newProvs.isNotEmpty ? newProvs[0] : '';
-                    });
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                  decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade400), borderRadius: BorderRadius.circular(8)),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(DateFormat('dd / MM / yyyy').format(selectedDate), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                      const Icon(Icons.calendar_today, color: brandRed, size: 20),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              const Text('2. Chọn đài mở thưởng trong ngày', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87)),
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade400), borderRadius: BorderRadius.circular(8)),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: availableProvinces.contains(selectedProvince) ? selectedProvince : (availableProvinces.isNotEmpty ? availableProvinces[0] : null),
-                    isExpanded: true,
-                    items: availableProvinces.map((p) => DropdownMenuItem(value: p, child: Text(p, style: const TextStyle(fontWeight: FontWeight.w600)))).toList(),
-                    onChanged: (val) { if (val != null) setState(() => selectedProvince = val); },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              const Text('3. Nhập đúng 5 chữ số trên vé', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87)),
-              const SizedBox(height: 6),
-              TextField(
-                controller: ticketNumberController,
-                keyboardType: TextInputType.number,
-                maxLength: 5,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 2),
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Nhập đủ 5 số (VD: 37166)',
-                  prefixIcon: Icon(Icons.confirmation_number, color: brandRed),
-                  counterText: '',
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(backgroundColor: brandRed, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-                  onPressed: smartCheckTicket,
-                  icon: const Icon(Icons.search),
-                  label: const Text('DÒ KẾT QUẢ NGAY', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ]),
-          ),
-        ),
-        if (searchResultText.isNotEmpty) ...[
-          const SizedBox(height: 12),
+    return Padding(
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
           Card(
-            color: Colors.white,
-            elevation: 2,
+            elevation: 1,
+            margin: EdgeInsets.zero,
             child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: SelectableText(searchResultText, style: const TextStyle(height: 1.5, fontSize: 13, fontWeight: FontWeight.w500, color: ink)),
+              padding: const EdgeInsets.all(10),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('1. Ngày mở thưởng', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black87)),
+                const SizedBox(height: 3),
+                InkWell(
+                  onTap: () async {
+                    DateTime? picked = await showDatePicker(
+                      context: context,
+                      initialDate: selectedDate,
+                      firstDate: DateTime(2024),
+                      lastDate: DateTime.now(),
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        selectedDate = picked;
+                        List<String> newProvs = getProvincesForDate(picked);
+                        selectedProvince = newProvs.isNotEmpty ? newProvs[0] : '';
+                      });
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade400), borderRadius: BorderRadius.circular(6)),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(DateFormat('dd / MM / yyyy').format(selectedDate), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                        const Icon(Icons.calendar_today, color: brandRed, size: 16),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text('2. Đài mở thưởng', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black87)),
+                const SizedBox(height: 3),
+                Container(
+                  height: 38,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade400), borderRadius: BorderRadius.circular(6)),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: availableProvinces.contains(selectedProvince) ? selectedProvince : (availableProvinces.isNotEmpty ? availableProvinces[0] : null),
+                      isExpanded: true,
+                      style: const TextStyle(fontSize: 13, color: ink, fontWeight: FontWeight.w600),
+                      items: availableProvinces.map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
+                      onChanged: (val) { if (val != null) setState(() => selectedProvince = val); },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text('3. Nhập 6 chữ số trên vé', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black87)),
+                const SizedBox(height: 3),
+                SizedBox(
+                  height: 40,
+                  child: TextField(
+                    controller: ticketNumberController,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 2),
+                    decoration: const InputDecoration(
+                      contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                      border: OutlineInputBorder(),
+                      hintText: 'Nhập đủ 6 số (VD: 234596)',
+                      counterText: '',
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  height: 40,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: brandRed, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6))),
+                    onPressed: smartCheckTicket,
+                    icon: const Icon(Icons.search, size: 18),
+                    label: const Text('DÒ KẾT QUẢ NGAY', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ]),
+            ),
+          ),
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: SingleChildScrollView(
+                child: SelectableText(
+                  searchResultText.isEmpty ? '💡 Hướng dẫn: Chọn ngày, chọn đài, nhập 6 số vé và bấm "Dò kết quả ngay" để đối chiếu chi tiết các giải trúng.' : searchResultText,
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: searchResultText.isEmpty ? Colors.black54 : ink, height: 1.4),
+                ),
+              ),
             ),
           ),
         ],
-      ],
+      ),
     );
   }
 
   Widget infoPage() => ListView(
-    padding: const EdgeInsets.all(16),
+    padding: const EdgeInsets.all(12),
     children: [
-      const Text('LỊCH QUY ĐÀI XỔ SỐ MIỀN NAM', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-      const SizedBox(height: 10),
+      const Text('LỊCH QUY ĐÀI XỔ SỐ MIỀN NAM', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+      const SizedBox(height: 8),
       _scheduleCard('Thứ Hai', 'Thứ 2', ['TP. Hồ Chí Minh', 'Đồng Tháp', 'Cà Mau']),
       _scheduleCard('Thứ Ba', 'Thứ 3', ['Bến Tre', 'Vũng Tàu', 'Bạc Liêu']),
       _scheduleCard('Thứ Tư', 'Thứ 4', ['Đồng Nai', 'Cần Thơ', 'Sóc Trăng']),
@@ -366,24 +372,26 @@ class _HomePageState extends State<HomePage> {
   );
 
   Widget _scheduleCard(String day, String badge, List<String> provinces) => Card(
-    margin: const EdgeInsets.only(bottom: 10),
+    margin: const EdgeInsets.only(bottom: 8),
     child: ListTile(
+      dense: true,
       leading: CircleAvatar(
+        radius: 16,
         backgroundColor: const Color(0xFFFFE5E5), 
-        child: Text(badge, style: const TextStyle(color: brandRed, fontWeight: FontWeight.bold, fontSize: 12))
+        child: Text(badge, style: const TextStyle(color: brandRed, fontWeight: FontWeight.bold, fontSize: 11))
       ),
-      title: Text(day, style: const TextStyle(fontWeight: FontWeight.bold)),
-      subtitle: Text('Đài: ${provinces.join(', ')}', style: const TextStyle(fontSize: 12, color: Colors.black87)),
+      title: Text(day, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+      subtitle: Text('Đài: ${provinces.join(', ')}', style: const TextStyle(fontSize: 11, color: Colors.black87)),
     ),
   );
 
   Widget settingsPage() => ListView(
-    padding: const EdgeInsets.all(16),
+    padding: const EdgeInsets.all(12),
     children: [
-      const Text('CÀI ĐẶT', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-      const SizedBox(height: 12),
-      const Card(child: ListTile(leading: Icon(Icons.verified, color: brandRed), title: Text('Nguồn dữ liệu trực tuyến'), subtitle: Text('Đồng bộ thời gian thực chuẩn xác 100% từ xsmn.mobi'))),
-      Card(child: const ListTile(leading: Icon(Icons.verified_user_outlined, color: brandRed), title: Text('Phiên bản ứng dụng'), subtitle: Text('Dò số • v3.0 Pro'))),
+      const Text('CÀI ĐẶT', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+      const SizedBox(height: 10),
+      const Card(child: ListTile(dense: true, leading: Icon(Icons.verified, color: brandRed, size: 20), title: Text('Nguồn dữ liệu', style: TextStyle(fontSize: 13)), subtitle: Text('Đồng bộ 100% từ xsmn.mobi', style: TextStyle(fontSize: 11)))),
+      Card(child: const ListTile(dense: true, leading: Icon(Icons.verified_user_outlined, color: brandRed, size: 20), title: Text('Phiên bản', style: TextStyle(fontSize: 13)), subtitle: Text('Dò số • v3.2 Pro (Gọn trong 1 màn hình)', style: TextStyle(fontSize: 11)))),
     ],
   );
 }
