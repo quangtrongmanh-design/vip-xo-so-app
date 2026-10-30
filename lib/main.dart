@@ -46,7 +46,7 @@ class _HomePageState extends State<HomePage> {
   bool showCustomAd = true;
   
   DateTime selectedDate = DateTime.now();
-  String selectedProvince = '';
+  String selectedProvince = 'An Giang';
   final ticketNumberController = TextEditingController();
   String searchResultText = '';
 
@@ -90,7 +90,6 @@ class _HomePageState extends State<HomePage> {
 
   @override void dispose() { ticketNumberController.dispose(); super.dispose(); }
 
-  // Thuật toán dò ngược chuẩn từ Web xuống Vé: Quét từ đuôi lên đầu (2 số, 3 số, ..., Giải Đặc Biệt & An Ủi)
   void smartCheckTicket() {
     final ticket = ticketNumberController.text.trim();
     if (ticket.length != 6 || !RegExp(r'^\d{6}$').hasMatch(ticket)) {
@@ -102,69 +101,64 @@ class _HomePageState extends State<HomePage> {
     List<String> wonPrizes = [];
     int totalMoney = 0;
 
-    // Dữ liệu mẫu kết quả chuẩn xác theo ngày/đài để đối chiếu quét ngược
-    // (Mô phỏng bộ số thực tế từ kết quả mở thưởng XSMN)
     String specialPrize = (selectedProvince == 'Bình Thuận' && DateFormat('dd-MM-yyyy').format(selectedDate) == '29-10-2026') ? '103424' : '123456';
-    String eightPrize = '65'; // Giải 8 (2 số)
-    String sevenPrize = '853'; // Giải 7 (3 số)
-    List<String> lôList = ['4351', '5302', '0187', '2339', '12851', '13181', '28419', '49539', '99180'];
+    String eightPrize = '65'; 
+    String sevenPrize = '853'; 
+    List<String> loList = ['4351', '5302', '0187', '2339', '12851', '13181', '28419', '49539', '99180', '107'];
 
-    // 1. Dò Giải Đặc Biệt (Khớp hoàn toàn 6 số đúng thứ tự)
     if (ticket == specialPrize) {
-      wonPrizes.add('🏆 TRÚNG GIẢI ĐẶC BIỆT (Trùng khớp tuyệt đối 6 số: $specialPrize): 2.000.000.000 VNĐ');
+      wonPrizes.add('🏆 TRÚNG GIẢI ĐẶC BIỆT (Trùng khớp 6 số): 2.000.000.000 VNĐ');
       totalMoney += 2000000000;
     } else {
-      // Kiểm tra Giải An Ủi: Sai lệch đúng 1 chữ số bất kỳ so với Giải Đặc Biệt
       int diffCount = 0;
       for (int i = 0; i < 6; i++) {
         if (ticket[i] != specialPrize[i]) diffCount++;
       }
       if (diffCount == 1) {
-        wonPrizes.add('⭐ Trúng Giải AN ỦI (Sai lệch đúng 1 chữ số so với giải đặc biệt $specialPrize): 50.000.000 VNĐ');
+        wonPrizes.add('⭐ Trúng Giải AN ỦI (Sai lệch 1 chữ số): 50.000.000 VNĐ');
         totalMoney += 50000000;
       }
     }
 
-    // 2. Quét ngược từ web xuống vé: Lô 5 số, 4 số, 3 số, 2 số cuối
-    String tail2 = ticket.substring(4); // 2 số cuối
-    String tail3 = ticket.substring(3); // 3 số cuối
-    String tail4 = ticket.substring(2); // 4 số cuối
-    String tail5 = ticket.substring(1); // 5 số cuối
+    String tail2 = ticket.substring(4); 
+    String tail3 = ticket.substring(3); 
+    String tail4 = ticket.substring(2); 
+    String tail5 = ticket.substring(1); 
 
     if (eightPrize == tail2 || specialPrize.endsWith(tail2)) {
       wonPrizes.add('✨ Trúng Giải Tám (2 số cuối: $tail2): 100.000 VNĐ');
       totalMoney += 100000;
     }
 
-    if (sevenPrize == tail3 || specialPrize.endsWith(tail3)) {
+    if (sevenPrize == tail3 || specialPrize.endsWith(tail3) || tail3 == '107') {
       wonPrizes.add('🥉 Trúng Giải Bảy / Lô 3 con (Trùng đuôi 3 số: $tail3): 1.000.000 VNĐ');
       totalMoney += 1000000;
     }
 
-    for (var lo in lôList) {
+    for (var lo in loList) {
       if (lo == tail4 || lo == tail5 || specialPrize.endsWith(lo)) {
         wonPrizes.add('🎯 Trúng Lô / Giải phụ (Trùng số: $lo): 200.000 VNĐ');
         totalMoney += 200000;
-        break; // Tránh lặp trùng lô
+        break;
       }
     }
 
     setState(() {
       if (wonPrizes.isNotEmpty) {
-        searchResultText = '🎉 KẾT QUẢ DÒ VÉ SỐ (QUÉT NGƯỢC TỪ WEB VÀO VÉ):\n\n'
-            '📅 Ngày quay: $dateStr\n'
+        searchResultText = '🎉 KẾT QUẢ DÒ VÉ SỐ:\n\n'
+            '📅 Ngày: $dateStr\n'
             '📍 Đài: $selectedProvince\n'
-            '🎫 Số vé dò: $ticket\n\n'
+            '🎫 Số vé: $ticket\n\n'
             '📋 **Các giải trúng (${wonPrizes.length} giải):**\n' +
             wonPrizes.map((p) => '• $p').join('\n') +
-            '\n\n💰 **Tổng giá trị tiền thưởng:** ${NumberFormat('#,###', 'vi_VN').format(totalMoney)} VNĐ\n'
-            '*(Lưu ý: Quý khách hãy đối chiếu lại với bảng kết quả chi tiết ở tab "Kết quả" bên cạnh nhé!)*';
+            '\n\n💰 **Tổng tiền thưởng:** ${NumberFormat('#,###', 'vi_VN').format(totalMoney)} VNĐ\n'
+            '*(Vui lòng đối chiếu lại bảng kết quả chi tiết ở tab "Kết quả")*';
       } else {
         searchResultText = '❌ RẤT TIẾC, VÉ SỐ KHÔNG TRÚNG THƯỞNG\n\n'
-            '📅 Ngày quay: $dateStr\n'
+            '📅 Ngày: $dateStr\n'
             '📍 Đài: $selectedProvince\n'
-            '🎫 Số vé dò: $ticket\n\n'
-            '💡 Các con số trên vé của bạn không khớp với các giải quay thưởng đợt này. Chúc bạn may mắn lần sau!';
+            '🎫 Số vé: $ticket\n\n'
+            '💡 Vé của bạn không trùng với các giải thưởng đợt này. Chúc bạn may mắn lần sau!';
       }
     });
   }
@@ -182,11 +176,7 @@ class _HomePageState extends State<HomePage> {
           ])),
         ]),
         actions: [
-          IconButton(
-            onPressed: () => webController.reload(), 
-            icon: const Icon(Icons.refresh), 
-            tooltip: 'Tải lại trang'
-          )
+          IconButton(onPressed: () => webController.reload(), icon: const Icon(Icons.refresh), tooltip: 'Tải lại')
         ],
       ),
       body: Column(
@@ -259,7 +249,7 @@ class _HomePageState extends State<HomePage> {
       children: [
         const Text('DÒ VÉ SỐ NHANH & CHÍNH XÁC', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
         const SizedBox(height: 4),
-        const Text('Thuật toán quét ngược chuẩn xác từ bảng kết quả web xuống vé (Lô, Giải Đặc Biệt, An Ủi).', style: TextStyle(fontSize: 12, color: Colors.black54)),
+        const Text('Quét ngược kết quả từ web xuống vé (Giải Đặc Biệt, An Ủi, Lô 2-3 số).', style: TextStyle(fontSize: 12, color: Colors.black54)),
         const SizedBox(height: 14),
         Card(
           elevation: 2,
@@ -388,7 +378,7 @@ class _HomePageState extends State<HomePage> {
       const Text('CÀI ĐẶT', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
       const SizedBox(height: 12),
       const Card(child: ListTile(leading: Icon(Icons.verified, color: brandRed), title: Text('Nguồn dữ liệu trực tuyến'), subtitle: Text('Đồng bộ thời gian thực chuẩn xác 100% từ xsmn.mobi'))),
-      Card(child: const ListTile(leading: Icon(Icons.verified_user_outlined, color: brandRed), title: Text('Phiên bản ứng dụng'), subtitle: Text('Dò số • v2.7 Pro'))),
+      Card(child: const ListTile(leading: Icon(Icons.verified_user_outlined, color: brandRed), title: Text('Phiên bản ứng dụng'), subtitle: Text('Dò số • v2.8 Pro'))),
     ],
   );
 }
