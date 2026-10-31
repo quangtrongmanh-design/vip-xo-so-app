@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 const Color brandRed = Color(0xFFC62828);
 const Color ink = Color(0xFF202124);
@@ -31,12 +30,16 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int tab = 0; // 0: Dò ngay, 1: Lịch quay
+  int tab = 0;
   bool showCustomAd = true;
   
   DateTime selectedDate = DateTime.now();
   String selectedProvince = 'An Giang';
   bool hasSearched = false;
+
+  String formatDate(DateTime d) {
+    return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+  }
 
   List<String> getProvincesForDate(DateTime date) {
     int weekday = date.weekday;
@@ -66,9 +69,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   List> getLiveResultRows() {
-    String dateStr = DateFormat('dd-MM-yyyy').format(selectedDate);
+    String dateStr = formatDate(selectedDate);
 
-    if (dateStr == '29-10-2026' && selectedProvince == 'An Giang') {
+    if (dateStr == '29/10/2026' && selectedProvince == 'An Giang') {
       return [
         {'prize': 'G8', 'number': '96', 'value': '100.000 VNĐ'},
         {'prize': 'G7', 'number': '107', 'value': '200.000 VNĐ'},
@@ -82,7 +85,7 @@ class _HomePageState extends State<HomePage> {
       ];
     }
 
-    if (dateStr == '30-10-2026' && selectedProvince == 'Vĩnh Long') {
+    if (dateStr == '30/10/2026' && selectedProvince == 'Vĩnh Long') {
       return [
         {'prize': 'G8', 'number': '65', 'value': '100.000 VNĐ'},
         {'prize': 'G7', 'number': '069', 'value': '200.000 VNĐ'},
@@ -120,7 +123,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(width: 6),
           const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('DÒ SỐ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-            Text('Tự động cập nhật • v6.0 Pro', style: TextStyle(fontSize: 8, color: Colors.black54))
+            Text('Tự động cập nhật • v6.1 Pro', style: TextStyle(fontSize: 8, color: Colors.black54))
           ])),
         ]),
         actions: [
@@ -187,7 +190,7 @@ class _HomePageState extends State<HomePage> {
       selectedProvince = availableProvinces.isNotEmpty ? availableProvinces[0] : '';
     }
 
-    String formattedDate = DateFormat('dd/MM/yyyy').format(selectedDate);
+    String formattedDate = formatDate(selectedDate);
     bool pending = isTodayOrFuture();
     List> resultRows = getLiveResultRows();
 
@@ -227,7 +230,7 @@ class _HomePageState extends State<HomePage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(DateFormat('dd/MM/yyyy').format(selectedDate), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                            Text(formatDate(selectedDate), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                             const Icon(Icons.calendar_today, color: brandRed, size: 12),
                           ],
                         ),
