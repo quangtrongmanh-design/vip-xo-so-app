@@ -27,6 +27,7 @@ jobs:
       - name: Generate Android Platform Structure
         run: |
           flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
+          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
 
       - name: Get Dependencies
         run: flutter pub get
