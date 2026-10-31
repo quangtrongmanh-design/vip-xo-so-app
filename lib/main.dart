@@ -43,7 +43,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int tab = 0; // 0: Dò ngay, 1: Trực tiếp Web, 2: Lịch quay
+  int tab = 0;
   bool showCustomAd = true;
   
   DateTime selectedDate = DateTime.now();
@@ -159,15 +159,15 @@ class _HomePageState extends State<HomePage> {
 
     int seed = dateStr.hashCode + selectedProvince.hashCode;
     return [
-      {'prize': 'G8', 'number': ((seed % 90) + 10).toString(), 'value': '100.000 VNĐ'},
-      {'prize': 'G7', 'number': ((seed % 900) + 100).toString(), 'value': '200.000 VNĐ'},
+      {'prize': 'G8', 'number': '${(seed % 90) + 10}', 'value': '100.000 VNĐ'},
+      {'prize': 'G7', 'number': '${(seed % 900) + 100}', 'value': '200.000 VNĐ'},
       {'prize': 'G6', 'number': '${seed % 9000 + 1000}', 'value': '400.000 VNĐ'},
       {'prize': 'G5', 'number': '${seed % 9000 + 1000}', 'value': '1.000.000 VNĐ'},
       {'prize': 'G4', 'number': '${seed % 90000 + 10000}', 'value': '3.000.000 VNĐ'},
       {'prize': 'G3', 'number': '${seed % 90000 + 10000}', 'value': '10.000.000 VNĐ'},
       {'prize': 'G2', 'number': '${seed % 90000 + 10000}', 'value': '15.000.000 VNĐ'},
       {'prize': 'G1', 'number': '${seed % 90000 + 10000}', 'value': '30.000.000 VNĐ'},
-      {'prize': 'ĐB', 'number': ((seed % 900000) + 100000).toString(), 'value': '2.000.000.000 VNĐ'},
+      {'prize': 'ĐB', 'number': '${(seed % 900000) + 100000}', 'value': '2.000.000.000 VNĐ'},
     ];
   }
 
@@ -181,7 +181,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(width: 6),
           const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('DÒ SỐ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-            Text('Tự động cập nhật • v5.8 Pro', style: TextStyle(fontSize: 8, color: Colors.black54))
+            Text('Tự động cập nhật • v5.9 Pro', style: TextStyle(fontSize: 8, color: Colors.black54))
           ])),
         ]),
         actions: [
