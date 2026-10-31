@@ -20,17 +20,9 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
+          flutter-version: '3.16.5'
           channel: 'stable'
           cache: true
-
-      - name: Generate Android Scaffold & Patch Config
-        run: |
-          # 1. Tự động sinh ra bộ khung Android chuẩn v2 nếu thiếu
-          flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
-          
-          # 2. Chèn cờ vá lỗi tương thích buildconfig của Gradle
-          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
 
       - name: Get Dependencies
         run: flutter pub get
