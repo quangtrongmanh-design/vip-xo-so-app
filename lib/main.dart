@@ -135,7 +135,7 @@ class _HomePageState extends State<HomePage> {
         {'prize': 'G7', 'number': '107', 'value': '200.000 VNĐ'},
         {'prize': 'G6', 'number': '0159 - 7500 - 7146', 'value': '400.000 VNĐ'},
         {'prize': 'G5', 'number': '5786', 'value': '1.000.000 VNĐ'},
-        {'prize': 'G4', 'number': '65401 - 14542 - 69401\n09377 - 84910 - 12431 - 20492', 'value': '3.000.000 VNĐ'},
+        {'prize': 'G4', 'number': '65401 - 14542 - 69401', 'value': '3.000.000 VNĐ'},
         {'prize': 'G3', 'number': '58580 - 30357', 'value': '10.000.000 VNĐ'},
         {'prize': 'G2', 'number': '50872', 'value': '15.000.000 VNĐ'},
         {'prize': 'G1', 'number': '37166', 'value': '30.000.000 VNĐ'},
@@ -149,7 +149,7 @@ class _HomePageState extends State<HomePage> {
         {'prize': 'G7', 'number': '069', 'value': '200.000 VNĐ'},
         {'prize': 'G6', 'number': '7920 - 3216 - 4789', 'value': '400.000 VNĐ'},
         {'prize': 'G5', 'number': '4927', 'value': '1.000.000 VNĐ'},
-        {'prize': 'G4', 'number': '44709 - 88488 - 83134\n78182 - 85937 - 66291 - 72174', 'value': '3.000.000 VNĐ'},
+        {'prize': 'G4', 'number': '44709 - 88488 - 83134', 'value': '3.000.000 VNĐ'},
         {'prize': 'G3', 'number': '10445 - 87975', 'value': '10.000.000 VNĐ'},
         {'prize': 'G2', 'number': '22225', 'value': '15.000.000 VNĐ'},
         {'prize': 'G1', 'number': '75695', 'value': '30.000.000 VNĐ'},
@@ -157,27 +157,13 @@ class _HomePageState extends State<HomePage> {
       ];
     }
 
-    if (dateStr == '30-10-2026' && selectedProvince == 'Bình Dương') {
-      return [
-        {'prize': 'G8', 'number': '17', 'value': '100.000 VNĐ'},
-        {'prize': 'G7', 'number': '729', 'value': '200.000 VNĐ'},
-        {'prize': 'G6', 'number': '5023 - 4810 - 9731', 'value': '400.000 VNĐ'},
-        {'prize': 'G5', 'number': '0575', 'value': '1.000.000 VNĐ'},
-        {'prize': 'G4', 'number': '51129 - 15863 - 68564\n39478 - 86066 - 90157 - 34856', 'value': '3.000.000 VNĐ'},
-        {'prize': 'G3', 'number': '61021 - 99669', 'value': '10.000.000 VNĐ'},
-        {'prize': 'G2', 'number': '82416', 'value': '15.000.000 VNĐ'},
-        {'prize': 'G1', 'number': '45874', 'value': '30.000.000 VNĐ'},
-        {'prize': 'ĐB', 'number': '540657', 'value': '2.000.000.000 VNĐ'},
-      ];
-    }
-
     int seed = dateStr.hashCode + selectedProvince.hashCode;
     return [
       {'prize': 'G8', 'number': ((seed % 90) + 10).toString(), 'value': '100.000 VNĐ'},
       {'prize': 'G7', 'number': ((seed % 900) + 100).toString(), 'value': '200.000 VNĐ'},
-      {'prize': 'G6', 'number': '${seed \% 9000 + 1000} -${seed % 8000 + 1000}', 'value': '400.000 VNĐ'},
+      {'prize': 'G6', 'number': '${seed % 9000 + 1000}', 'value': '400.000 VNĐ'},
       {'prize': 'G5', 'number': '${seed % 9000 + 1000}', 'value': '1.000.000 VNĐ'},
-      {'prize': 'G4', 'number': '${seed \% 90000 + 10000} -${seed % 80000 + 10000}', 'value': '3.000.000 VNĐ'},
+      {'prize': 'G4', 'number': '${seed % 90000 + 10000}', 'value': '3.000.000 VNĐ'},
       {'prize': 'G3', 'number': '${seed % 90000 + 10000}', 'value': '10.000.000 VNĐ'},
       {'prize': 'G2', 'number': '${seed % 90000 + 10000}', 'value': '15.000.000 VNĐ'},
       {'prize': 'G1', 'number': '${seed % 90000 + 10000}', 'value': '30.000.000 VNĐ'},
@@ -195,7 +181,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(width: 6),
           const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('DÒ SỐ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-            Text('Tự động cập nhật • v5.7 Pro', style: TextStyle(fontSize: 8, color: Colors.black54))
+            Text('Tự động cập nhật • v5.8 Pro', style: TextStyle(fontSize: 8, color: Colors.black54))
           ])),
         ]),
         actions: [
@@ -474,3 +460,47 @@ class _HomePageState extends State<HomePage> {
           padding: const EdgeInsets.all(6),
           color: const Color(0xFFFFF8E1),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.public, size: 14, color: brandRed),
+              const SizedBox(width: 4),
+              Text('Trang nhà đài trực tiếp: $selectedProvince (${DateFormat('dd/MM/yyyy').format(selectedDate)})', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: ink)),
+            ],
+          ),
+        ),
+        Expanded(
+          child: WebViewWidget(controller: tabWebController),
+        ),
+      ],
+    );
+  }
+
+  Widget infoPage() => ListView(
+    padding: const EdgeInsets.all(8),
+    children: [
+      const Text('LỊCH QUY ĐÀI XỔ SỐ MIỀN NAM', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+      const SizedBox(height: 4),
+      _scheduleCard('Thứ Hai', 'Thứ 2', ['TP. Hồ Chí Minh', 'Đồng Tháp', 'Cà Mau']),
+      _scheduleCard('Thứ Ba', 'Thứ 3', ['Bến Tre', 'Vũng Tàu', 'Bạc Liêu']),
+      _scheduleCard('Thứ Tư', 'Thứ 4', ['Đồng Nai', 'Cần Thơ', 'Sóc Trăng']),
+      _scheduleCard('Thứ Năm', 'Thứ 5', ['Tây Ninh', 'An Giang', 'Bình Thuận']),
+      _scheduleCard('Thứ Sáu', 'Thứ 6', ['Vĩnh Long', 'Bình Dương', 'Trà Vinh']),
+      _scheduleCard('Thứ Bảy', 'Thứ 7', ['TP. Hồ Chí Minh', 'Long An', 'Bình Phước', 'Hậu Giang']),
+      _scheduleCard('Chủ Nhật', 'CN', ['Tiền Giang', 'Kiên Giang', 'Đà Lạt']),
+    ],
+  );
+
+  Widget _scheduleCard(String day, String badge, List<String> provinces) => Card(
+    margin: const EdgeInsets.only(bottom: 4),
+    child: ListTile(
+      dense: true,
+      leading: CircleAvatar(
+        radius: 12,
+        backgroundColor: const Color(0xFFFFE5E5), 
+        child: Text(badge, style: const TextStyle(color: brandRed, fontWeight: FontWeight.bold, fontSize: 9))
+      ),
+      title: Text(day, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+      subtitle: Text('Đài: ${provinces.join(', ')}', style: const TextStyle(fontSize: 9, color: Colors.black87)),
+    ),
+  );
+}
