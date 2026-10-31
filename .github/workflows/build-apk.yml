@@ -24,6 +24,10 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Create Native Android Template
+        run: |
+          flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
+
       - name: Install dependencies
         run: flutter pub get
 
