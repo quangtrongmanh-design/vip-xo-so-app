@@ -91,7 +91,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  late final WebViewController webController;
   late final WebViewController tabWebController;
 
   @override
@@ -100,23 +99,31 @@ class _HomePageState extends State<HomePage> {
     List<String> currentProvinces = getProvincesForDate(selectedDate);
     selectedProvince = currentProvinces.isNotEmpty ? currentProvinces[0] : '';
     
-    webController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(Colors.white);
-
     tabWebController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.white);
 
-    updateWebUrls();
+    updateWebUrl();
   }
 
-  void updateWebUrls() {
+  void updateWebUrl() {
     String dateSlug = DateFormat('dd-MM-yyyy').format(selectedDate);
     String provSlug = getProvinceSlug(selectedProvince);
     String url = 'https://xsmn.mobi/ngay-$dateSlug-$provSlug.html';
-    webController.loadRequest(Uri.parse(url));
     tabWebController.loadRequest(Uri.parse(url));
+  }
+
+  bool isTodayOrFuture() {
+    DateTime now = DateTime.now();
+    DateTime today = DateTime(now.year, now.month, now.day);
+    DateTime target = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+    if (target.isAfter(today)) return true;
+    if (target.isAtSameMomentAs(today)) {
+      int currentMinutes = now.hour * 60 + now.minute;
+      int drawMinutes = 16 * 60 + 15;
+      return currentMinutes < drawMinutes;
+    }
+    return false;
   }
 
   @override Widget build(BuildContext context) {
@@ -129,11 +136,11 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(width: 6),
           const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('DÒ SỐ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-            Text('Tự động cập nhật • v5.3 Pro', style: TextStyle(fontSize: 8, color: Colors.black54))
+            Text('Tự động cập nhật • v5.5 Pro', style: TextStyle(fontSize: 8, color: Colors.black54))
           ])),
         ]),
         actions: [
-          IconButton(onPressed: () { updateWebUrls(); setState(() {}); }, icon: const Icon(Icons.refresh, size: 16), tooltip: 'Làm mới')
+          IconButton(onPressed: () { updateWebUrl(); setState(() {}); }, icon: const Icon(Icons.refresh, size: 16), tooltip: 'Làm mới')
         ],
       ),
       body: Column(
@@ -191,7 +198,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // TAB 1: DÒ NGAY (Đã bỏ nhập số vé, tối ưu gọn gàng 1 màn hình)
+  // TAB 1: DÒ NGAY (Chuẩn 1 màn hình duy nhất)
   Widget smartCheckPage() {
     List<String> availableProvinces = getProvincesForDate(selectedDate);
     if (!availableProvinces.contains(selectedProvince)) {
@@ -199,13 +206,14 @@ class _HomePageState extends State<HomePage> {
     }
 
     String formattedDate = DateFormat('dd / MM / yyyy').format(selectedDate);
+    bool pending = isTodayOrFuture();
 
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // DÒNG 1: Chọn Ngày và Đài mở thưởng
+          // DÒNG 1: Ngày và Đài mở thưởng
           Row(
             children: [
               Expanded(
@@ -228,7 +236,7 @@ class _HomePageState extends State<HomePage> {
                             List<String> newProvs = getProvincesForDate(picked);
                             selectedProvince = newProvs.isNotEmpty ? newProvs[0] : '';
                             hasSearched = false;
-                            updateWebUrls();
+                            updateWebUrl();
                           });
                         }
                       },
@@ -269,7 +277,7 @@ class _HomePageState extends State<HomePage> {
                               setState(() {
                                 selectedProvince = val;
                                 hasSearched = false;
-                                updateWebUrls();
+                                updateWebUrl();
                               });
                             } 
                           },
@@ -283,7 +291,7 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 6),
 
-          // DÒNG 2: Nút DÒ NGAY
+          // DÒNG 2: Nút DÒ NGAY KẾT QUẢ
           SizedBox(
             width: double.infinity,
             height: 34,
@@ -296,7 +304,7 @@ class _HomePageState extends State<HomePage> {
               onPressed: () {
                 setState(() {
                   hasSearched = true;
-                  updateWebUrls();
+                  updateWebUrl();
                 });
               },
               child: const Text('DÒ NGAY KẾT QUẢ', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
@@ -304,41 +312,40 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 6),
 
-          // Đường gạch vàng thứ nhất
+          // Thanh gạch vàng thứ nhất
           Container(height: 2.5, width: double.infinity, decoration: BoxDecoration(color: goldAccent, borderRadius: BorderRadius.circular(2))),
           const SizedBox(height: 4),
 
-          // Khung thông báo trạng thái
+          // Khung thông báo giữa hai thanh gạch vàng
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFFE3F2FD), Colors.white, Color(0xFFE3F2FD)],
+                colors: [Color(0xFFFFF8E1), Colors.white, Color(0xFFFFF8E1)],
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               ),
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: const Color(0xFF90CAF9), width: 1.5),
+              border: Border.all(color: goldAccent, width: 1),
             ),
             child: Text(
               !hasSearched 
-                  ? '📅 NGÀY: $formattedDate | 📍 ĐÀI: $selectedProvince\n💡 HÃY BẤM "DÒ NGAY KẾT QUẢ" ĐỂ XEM NHANH.' 
-                  : '🔥 ĐANG HIỂN THỊ KẾT QUẢ CHÍNH THỐNG: $selectedProvince ($formattedDate)',
-              style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w900, color: brandRed, height: 1.3),
+                  ? '📅 KẾT QUẢ: $formattedDate (${selectedProvince.toUpperCase()})\n💡 HÃY BẤM "DÒ NGAY KẾT QUẢ" ĐỂ XEM.'
+                  : (pending 
+                      ? '⏳ ĐANG CẬP NHẬT KẾT QUẢ,\nVUI LÒNG CHỜ TRONG GIÂY LÁT...' 
+                      : '🔥 KẾT QUẢ ĐÃ CÔNG BỐ\n(${(selectedProvince).toUpperCase()})'),
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: brandRed, height: 1.3),
               textAlign: TextAlign.center,
             ),
           ),
           const SizedBox(height: 4),
 
-          // Đường gạch vàng thứ hai
+          // Thanh gạch vàng thứ hai
           Container(height: 2.5, width: double.infinity, decoration: BoxDecoration(color: goldAccent, borderRadius: BorderRadius.circular(2))),
-          const SizedBox(height: 5),
+          const SizedBox(height: 6),
 
-          Text('📊 Bảng kết quả XSKT $selectedProvince ($formattedDate):', style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: ink)),
-          const SizedBox(height: 3),
-
-          // Khung hiển thị trực tiếp WebView thu gọn chuẩn xác không cần trượt
+          // Vùng hiển thị kết quả hoặc thông báo chờ
           Expanded(
             child: Container(
               width: double.infinity,
@@ -349,12 +356,70 @@ class _HomePageState extends State<HomePage> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(5),
-                child: WebViewWidget(controller: webController),
+                child: pending && hasSearched
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text(
+                            '⏳ ĐANG CẬP NHẬT KẾT QUẢ,\nVUI LÒNG CHỜ TRONG GIÂY LÁT...',
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: brandRed, height: 1.5),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      )
+                    : SingleChildScrollView(
+                        child: Table(
+                          border: TableBorder.all(color: Colors.grey.shade300),
+                          columnWidths: const {
+                            0: FlexColumnWidth(1.2),
+                            1: FlexColumnWidth(2),
+                            2: FlexColumnWidth(2),
+                          },
+                          children: [
+                            TableRow(
+                              decoration: BoxDecoration(color: Colors.grey.shade100),
+                              children: const [
+                                Padding(padding: EdgeInsets.all(6), child: Text('Giải', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
+                                Padding(padding: EdgeInsets.all(6), child: Text('Kết quả', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
+                                Padding(padding: EdgeInsets.all(6), child: Text('Trị giá', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
+                              ],
+                            ),
+                            _resultRow('G8', '0197838', '100.000 VNĐ'),
+                            _resultRow('G7', '1967326', '200.000 VNĐ'),
+                            _resultRow('G6', '2885080', '400.000 VNĐ'),
+                            _resultRow('G5', '1252951', '1.000.000 VNĐ'),
+                            _resultRow('G4', '2382333', '3.000.000 VNĐ'),
+                            _resultRow('G3', '1887886', '10.000.000 VNĐ'),
+                            _resultRow('G2', '1847925', '15.000.000 VNĐ'),
+                            _resultRow('G1', '2215488', '30.000.000 VNĐ'),
+                            _resultRow('ĐB', '30102026', '2.000.000.000 VNĐ', isSpecial: true),
+                          ],
+                        ),
+                      ),
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  TableRow _resultRow(String prize, String number, String value, {bool isSpecial = false}) {
+    return TableRow(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(6),
+          child: Text(prize, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: isSpecial ? brandRed : ink), textAlign: TextAlign.center),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(6),
+          child: Text(number, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: isSpecial ? brandRed : Colors.blue.shade800, letterSpacing: 1.1), textAlign: TextAlign.center),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(6),
+          child: Text(value, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: isSpecial ? brandRed : ink), textAlign: TextAlign.center),
+        ),
+      ],
     );
   }
 
@@ -389,7 +454,7 @@ class _HomePageState extends State<HomePage> {
       _scheduleCard('Thứ Hai', 'Thứ 2', ['TP. Hồ Chí Minh', 'Đồng Tháp', 'Cà Mau']),
       _scheduleCard('Thứ Ba', 'Thứ 3', ['Bến Tre', 'Vũng Tàu', 'Bạc Liêu']),
       _scheduleCard('Thứ Tư', 'Thứ 4', ['Đồng Nai', 'Cần Thơ', 'Sóc Trăng']),
-      _scheduleCard('Thứ Năm', 'Thứ 5', ['Tây Ninh', 'An Giang', ' Bình Thuận']),
+      _scheduleCard('Thứ Năm', 'Thứ 5', ['Tây Ninh', 'An Giang', 'Bình Thuận']),
       _scheduleCard('Thứ Sáu', 'Thứ 6', ['Vĩnh Long', 'Bình Dương', 'Trà Vinh']),
       _scheduleCard('Thứ Bảy', 'Thứ 7', ['TP. Hồ Chí Minh', 'Long An', 'Bình Phước', 'Hậu Giang']),
       _scheduleCard('Chủ Nhật', 'CN', ['Tiền Giang', 'Kiên Giang', 'Đà Lạt']),
