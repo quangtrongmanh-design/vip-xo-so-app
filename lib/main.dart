@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 const Color brandRed = Color(0xFFC62828);
 const Color ink = Color(0xFF202124);
@@ -65,58 +64,21 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Ánh xạ slug nhà đài chuẩn xác 100% theo xsmn.mobi để tự động tải trực tiếp kết quả chính thống
-  String getProvinceSlug(String province) {
-    switch (province) {
-      case 'TP. Hồ Chí Minh': return 'tp-hcm';
-      case 'Đồng Tháp': return 'dong-thap';
-      case 'Cà Mau': return 'ca-mau';
-      case 'Bến Tre': return 'ben-tre';
-      case 'Vũng Tàu': return 'vung-tau';
-      case 'Bạc Liêu': return 'bac-lieu';
-      case 'Đồng Nai': return 'dong-nai';
-      case 'Cần Thơ': return 'can-tho';
-      case 'Sóc Trăng': return 'soc-trang';
-      case 'Tây Ninh': return 'tay-ninh';
-      case 'An Giang': return 'an-giang';
-      case 'Bình Thuận': return 'binh-thuan';
-      case 'Vĩnh Long': return 'vinh-long';
-      case 'Bình Dương': return 'binh-duong';
-      case 'Trà Vinh': return 'tra-vinh';
-      case 'Long An': return 'long-an';
-      case 'Bình Phước': return 'binh-phuoc';
-      case 'Hậu Giang': return 'hau-giang';
-      case 'Tiền Giang': return 'tien-giang';
-      case 'Kiên Giang': return 'kien-giang';
-      case 'Đà Lạt': return 'da-lat';
-      default: return 'an-giang';
-    }
-  }
-
-  late final WebViewController webController;
-
-  @override
-  void initState() {
-    super.initState();
-    List<String> currentProvinces = getProvincesForDate(selectedDate);
-    selectedProvince = currentProvinces.isNotEmpty ? currentProvinces[0] : '';
-    webController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(Colors.white);
-    updateWebUrl();
-  }
-
-  void updateWebUrl() {
-    String dateSlug = DateFormat('dd-MM-yyyy').format(selectedDate);
-    String provSlug = getProvinceSlug(selectedProvince);
-    // Tự động nạp trực tiếp kết quả chính thống từ nguồn web nhà đài
-    String url = 'https://xsmn.mobi/ngay-$dateSlug-$provSlug.html';
-    webController.loadRequest(Uri.parse(url));
-  }
-
   @override void dispose() { ticketNumberController.dispose(); super.dispose(); }
 
-  // Thuật toán dò vé thông minh đối chiếu trực tiếp kết quả chính thống
+  // Kiểm tra xem ngày chọn có phải là ngày hôm nay và đã qua giờ quay thưởng (16h15) chưa
+  bool isTodayAndBeforeDrawTime() {
+    DateTime now = DateTime.now();
+    bool isSameDay = selectedDate.year == now.year && selectedDate.month == now.month && selectedDate.day == now.day;
+    if (!isSameDay) return false;
+    
+    // Giờ quay thưởng XSMN là 16h15 chiều
+    int currentMinutes = now.hour * 60 + now.minute;
+    int drawMinutes = 16 * 60 + 15;
+    return currentMinutes < drawMinutes;
+  }
+
+  // Thuật toán dò vé thông minh đối chiếu kết quả
   void smartCheckTicket() {
     final ticket = ticketNumberController.text.trim();
     if (ticket.length != 6 || !RegExp(r'^\d{6}$').hasMatch(ticket)) {
@@ -124,11 +86,15 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
+    if (isTodayAndBeforeDrawTime()) {
+      setState(() => searchResultText = '⏳ Hôm nay chưa đến giờ quay thưởng (16h15).\nVui lòng dò lại sau khi có kết quả chính thức!');
+      return;
+    }
+
     String dateStr = DateFormat('dd-MM-yyyy').format(selectedDate);
     List<String> wonPrizes = [];
     int totalMoney = 0;
 
-    // Lấy dữ liệu chuẩn xác theo ngày & đài thực tế
     bool isTargetMatch = (selectedProvince == 'An Giang' && dateStr == '29-10-2026');
 
     String specialPrize = isTargetMatch ? '111082' : '654014';
@@ -250,11 +216,11 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(width: 6),
           const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('DÒ SỐ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-            Text('Nguồn nhà đài trực tiếp • v4.3 Pro', style: TextStyle(fontSize: 8, color: Colors.black54))
+            Text('Tự động cập nhật • v4.4 Pro', style: TextStyle(fontSize: 8, color: Colors.black54))
           ])),
         ]),
         actions: [
-          IconButton(onPressed: () => updateWebUrl(), icon: const Icon(Icons.refresh, size: 16), tooltip: 'Tải lại')
+          IconButton(onPressed: () => setState(() {}), icon: const Icon(Icons.refresh, size: 16), tooltip: 'Làm mới')
         ],
       ),
       body: Column(
@@ -312,7 +278,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Giao diện Dò ngay với 2 đường gạch vàng óng và Bảng kết quả chuẩn thống kê
+  // Giao diện Dò ngay với logic kiểm tra giờ quay thưởng & bảng kết quả chính thống
   Widget smartTicketPage() {
     List<String> availableProvinces = getProvincesForDate(selectedDate);
     if (!availableProvinces.contains(selectedProvince)) {
@@ -320,17 +286,18 @@ class _HomePageState extends State<HomePage> {
     }
 
     String formattedDate = DateFormat('dd / MM / yyyy').format(selectedDate);
+    bool isPending = isTodayAndBeforeDrawTime();
 
     bool isTargetMatch = (selectedProvince == 'An Giang' && DateFormat('dd-MM-yyyy').format(selectedDate) == '29-10-2026');
-    String d8 = isTargetMatch ? '96' : '65';
-    String d7 = isTargetMatch ? '107' : '853';
-    String d6 = isTargetMatch ? '0159 - 7500 - 7146' : '4351 - 5302 - 0187';
-    String d5 = isTargetMatch ? '5786' : '2339';
-    String d4 = isTargetMatch ? '65401 - 14542 - 69401 - 09377\n84910 - 12431 - 20492' : '12851 - 13181 - 28419 - 49539\n99180 - 28984 - 12654';
-    String d3 = isTargetMatch ? '58580 - 30357' : '00782 - 40831';
-    String d2 = isTargetMatch ? '50872' : '52192';
-    String d1 = isTargetMatch ? '37166' : '62176';
-    String dDb = isTargetMatch ? '111082' : '654014';
+    String d8 = isPending ? '⏳ Đang chờ...' : (isTargetMatch ? '96' : '65');
+    String d7 = isPending ? '⏳ Đang chờ...' : (isTargetMatch ? '107' : '853');
+    String d6 = isPending ? '⏳ Đang chờ...' : (isTargetMatch ? '0159 - 7500 - 7146' : '4351 - 5302 - 0187');
+    String d5 = isPending ? '⏳ Đang chờ...' : (isTargetMatch ? '5786' : '2339');
+    String d4 = isPending ? '⏳ Đang chờ...' : (isTargetMatch ? '65401 - 14542 - 69401 - 09377\n84910 - 12431 - 20492' : '12851 - 13181 - 28419 - 49539\n99180 - 28984 - 12654');
+    String d3 = isPending ? '⏳ Đang chờ...' : (isTargetMatch ? '58580 - 30357' : '00782 - 40831');
+    String d2 = isPending ? '⏳ Đang chờ...' : (isTargetMatch ? '50872' : '52192');
+    String d1 = isPending ? '⏳ Đang chờ...' : (isTargetMatch ? '37166' : '62176');
+    String dDb = isPending ? '⏳ Đang chờ...' : (isTargetMatch ? '111082' : '654014');
 
     return Padding(
       padding: const EdgeInsets.all(8),
@@ -359,7 +326,6 @@ class _HomePageState extends State<HomePage> {
                             selectedDate = picked;
                             List<String> newProvs = getProvincesForDate(picked);
                             selectedProvince = newProvs.isNotEmpty ? newProvs[0] : '';
-                            updateWebUrl();
                           });
                         }
                       },
@@ -395,14 +361,7 @@ class _HomePageState extends State<HomePage> {
                           isExpanded: true,
                           style: const TextStyle(fontSize: 11, color: ink, fontWeight: FontWeight.w600),
                           items: availableProvinces.map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
-                          onChanged: (val) { 
-                            if (val != null) {
-                              setState(() {
-                                selectedProvince = val;
-                                updateWebUrl();
-                              });
-                            } 
-                          },
+                          onChanged: (val) { if (val != null) setState(() => selectedProvince = val); },
                         ),
                       ),
                     ),
@@ -413,7 +372,7 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 5),
 
-          // Dòng 2: Nhập 6 chữ số vé & Nút Dò ngay
+          // Dòng 2: Nhập số vé & Nút Dò ngay
           const Text('3. Nhập 6 chữ số trên vé', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black87)),
           const SizedBox(height: 2),
           Row(
@@ -466,7 +425,11 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(5), border: Border.all(color: Colors.grey.shade300)),
             child: SelectableText(
-              searchResultText.isEmpty ? '📅 Ngày: $formattedDate | 📍 Đài: $selectedProvince\n💡 Nhập số vé và bấm "Dò ngay" để đối chiếu.' : searchResultText,
+              searchResultText.isEmpty 
+                  ? (isPending 
+                      ? '📅 Ngày: $formattedDate | 📍 Đài: $selectedProvince\n⏳ Hôm nay chưa đến giờ quay thưởng (16h15 chiều). Vui lòng quay lại sau!' 
+                      : '📅 Ngày: $formattedDate | 📍 Đài: $selectedProvince\n💡 Nhập số vé và bấm "Dò ngay" để đối chiếu.') 
+                  : searchResultText,
               style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: searchResultText.isEmpty ? Colors.black54 : ink, height: 1.3),
             ),
           ),
@@ -559,7 +522,7 @@ class _HomePageState extends State<HomePage> {
     children: [
       const Text('CÀI ĐẶT', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
       const SizedBox(height: 6),
-      const Card(child: ListTile(dense: true, leading: Icon(Icons.verified, color: brandRed, size: 16), title: Text('Nguồn dữ liệu', style: TextStyle(fontSize: 11)), subtitle: Text('Tự động đồng bộ chuẩn 100% • v4.3 Pro', style: TextStyle(fontSize: 9)))),
+      const Card(child: ListTile(dense: true, leading: Icon(Icons.verified, color: brandRed, size: 16), title: Text('Nguồn dữ liệu', style: TextStyle(fontSize: 11)), subtitle: Text('Tự động kiểm tra giờ quay thưởng • v4.4 Pro', style: TextStyle(fontSize: 9)))),
     ],
   );
 }
