@@ -20,20 +20,14 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
+          flutter-version: '3.16.0'
           channel: 'stable'
           cache: true
 
-      - name: Create Android Platform
-        run: |
-          flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
-          # Tự động hạ cấp độ tương thích Gradle xuống mức an toàn tuyệt đối
-          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
-
-      - name: Pub Get
+      - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build APK Release
+      - name: Build APK Clean
         run: flutter build apk --release --no-pub
 
       - name: Upload APK Artifact
