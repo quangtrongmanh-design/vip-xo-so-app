@@ -213,7 +213,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(width: 6),
           const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('DÒ SỐ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-            Text('Tự động cập nhật • v4.7.1 Pro', style: TextStyle(fontSize: 8, color: Colors.black54))
+            Text('Tự động cập nhật • v4.7.2 Pro', style: TextStyle(fontSize: 8, color: Colors.black54))
           ])),
         ]),
         actions: [
@@ -422,7 +422,7 @@ class _HomePageState extends State<HomePage> {
               border: Border.all(color: const Color(0xFF90CAF9), width: 1.5),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.blue.withValues(alpha: 0.1),
+                  color: Colors.blue.withOpacity(0.1),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -528,7 +528,7 @@ class _HomePageState extends State<HomePage> {
     children: [
       const Text('CÀI ĐẶT', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
       const SizedBox(height: 6),
-      const Card(child: ListTile(dense: true, leading: Icon(Icons.verified, color: brandRed, size: 16), title: Text('Nguồn dữ liệu', style: TextStyle(fontSize: 11)), subtitle: Text('Giao diện v4.7.1 Pro • Tự động cập nhật', style: TextStyle(fontSize: 9)))),
+      const Card(child: ListTile(dense: true, leading: Icon(Icons.verified, color: brandRed, size: 16), title: Text('Nguồn dữ liệu', style: TextStyle(fontSize: 11)), subtitle: Text('Giao diện v4.7.2 Pro • Tự động cập nhật', style: TextStyle(fontSize: 9)))),
     ],
   );
 }
