@@ -24,18 +24,23 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Create Fresh Clean Project & Copy Source
+      - name: Clean and Rebuild Project Structure
         run: |
-          # Lưu lại các file code lib hiện tại của anh
-          mkdir -p temp_lib
-          cp -r lib/* temp_lib/
+          # 1. Lưu lại các file mã nguồn và pubspec của anh
+          mkdir -p backup_data
+          cp -r lib backup_data/
+          cp pubspec.yaml backup_data/
           
-          # Tạo một dự án Flutter chuẩn mới tinh đè lên thư mục gốc
-          flutter create . --org com.vip.xoso --project-name vip_xo_so_app --force
+          # 2. Xóa toàn bộ file cũ trong thư mục gốc (giữ lại thư mục .git)
+          find . -maxdepth 1 ! -name '.' ! -name '.git' ! -name 'backup_data' -exec rm -rf {} +
           
-          # Khôi phục lại code lib của anh vào dự án sạch
+          # 3. Tạo mới hoàn toàn dự án Flutter chuẩn tại thư mục gốc
+          flutter create . --org com.vip.xoso --project-name vip_xo_so_app
+          
+          # 4. Phục hồi lại mã nguồn và cấu hình của anh vào dự án mới
           rm -rf lib/*
-          cp -r temp_lib/* lib/
+          cp -r backup_data/lib/* lib/
+          cp backup_data/pubspec.yaml .
 
       - name: Get Dependencies
         run: flutter pub get
