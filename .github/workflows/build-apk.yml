@@ -20,17 +20,14 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.16.5'
+          flutter-version: '3.19.0'
           channel: 'stable'
           cache: true
-
-      - name: Create Android Platform
-        run: flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
 
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build APK without obfuscation
+      - name: Build APK Clean
         run: flutter build apk --debug
 
       - name: Upload APK Artifact
