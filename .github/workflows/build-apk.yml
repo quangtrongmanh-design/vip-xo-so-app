@@ -20,20 +20,28 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.16.0'
+          flutter-version: '3.19.0'
           channel: 'stable'
           cache: true
 
-      - name: Generate Android Platform Structure
+      - name: Create Fresh Clean Project & Copy Source
         run: |
-          flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
-          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
+          # Lưu lại các file code lib hiện tại của anh
+          mkdir -p temp_lib
+          cp -r lib/* temp_lib/
+          
+          # Tạo một dự án Flutter chuẩn mới tinh đè lên thư mục gốc
+          flutter create . --org com.vip.xoso --project-name vip_xo_so_app --force
+          
+          # Khôi phục lại code lib của anh vào dự án sạch
+          rm -rf lib/*
+          cp -r temp_lib/* lib/
 
       - name: Get Dependencies
         run: flutter pub get
 
       - name: Build APK Release
-        run: flutter build apk --release --no-pub
+        run: flutter build apk --release
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
