@@ -20,30 +20,9 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
+          flutter-version: '3.16.5'
           channel: 'stable'
           cache: true
-
-      - name: Clean and Rebuild Project Structure
-        run: |
-          # 1. Lưu lại các file mã nguồn và pubspec của anh
-          mkdir -p backup_data
-          cp -r lib backup_data/
-          cp pubspec.yaml backup_data/
-          
-          # 2. Xóa toàn bộ file cũ trong thư mục gốc (giữ lại thư mục .git)
-          find . -maxdepth 1 ! -name '.' ! -name '.git' ! -name 'backup_data' -exec rm -rf {} +
-          
-          # 3. Tạo mới hoàn toàn dự án Flutter chuẩn tại thư mục gốc
-          flutter create . --org com.vip.xoso --project-name vip_xo_so_app
-          
-          # 4. Vá lỗi cấu hình Gradle buildconfig tương thích ngược
-          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
-          
-          # 5. Phục hồi lại mã nguồn và cấu hình của anh vào dự án mới
-          rm -rf lib/*
-          cp -r backup_data/lib/* lib/
-          cp backup_data/pubspec.yaml .
 
       - name: Get Dependencies
         run: flutter pub get
