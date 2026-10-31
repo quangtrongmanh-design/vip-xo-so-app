@@ -24,17 +24,6 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Android Structure & Patch Gradle
-        run: |
-          flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
-          
-          # Tự động cấu hình lại tương thích buildconfig và gradle properties
-          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
-          
-          # Hạ cấp AGP xuống 7.4.2 để tương thích hoàn toàn với Flutter 3.16.5
-          sed -i 's/com.android.application" version ".*" apply false/com.android.application" version "7.4.2" apply false/g' android/settings.gradle || true
-          sed -i 's/org.jetbrains.kotlin.android" version ".*" apply false/org.jetbrains.kotlin.android" version "1.8.22" apply false/g' android/settings.gradle || true
-
       - name: Get Dependencies
         run: flutter pub get
 
