@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 const Color brandRed = Color(0xFFC62828);
 const Color ink = Color(0xFF202124);
 const Color goldAccent = Color(0xFFFFB300);
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await NoticeService.init();
+void main() {
   runApp(const VipLotteryApp());
 }
 
@@ -29,21 +25,13 @@ class VipLotteryApp extends StatelessWidget {
   );
 }
 
-class NoticeService {
-  static final FlutterLocalNotificationsPlugin plugin = FlutterLocalNotificationsPlugin();
-  static Future<void> init() async {
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-    await plugin.initialize(const InitializationSettings(android: android));
-  }
-}
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
   @override State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  int tab = 0;
+  int tab = 0; // 0: Dò ngay, 1: Lịch quay
   bool showCustomAd = true;
   
   DateTime selectedDate = DateTime.now();
@@ -62,55 +50,6 @@ class _HomePageState extends State<HomePage> {
       case 7: return ['Tiền Giang', 'Kiên Giang', 'Đà Lạt'];
       default: return ['TP. Hồ Chí Minh'];
     }
-  }
-
-  String getProvinceSlug(String province) {
-    switch (province) {
-      case 'TP. Hồ Chí Minh': return 'tp-hcm';
-      case 'Đồng Tháp': return 'dong-thap';
-      case 'Cà Mau': return 'ca-mau';
-      case 'Bến Tre': return 'ben-tre';
-      case 'Vũng Tàu': return 'vung-tau';
-      case 'Bạc Liêu': return 'bac-lieu';
-      case 'Đồng Nai': return 'dong-nai';
-      case 'Cần Thơ': return 'can-tho';
-      case 'Sóc Trăng': return 'soc-trang';
-      case 'Tây Ninh': return 'tay-ninh';
-      case 'An Giang': return 'an-giang';
-      case 'Bình Thuận': return 'binh-thuan';
-      case 'Vĩnh Long': return 'vinh-long';
-      case 'Bình Dương': return 'binh-duong';
-      case 'Trà Vinh': return 'tra-vinh';
-      case 'Long An': return 'long-an';
-      case 'Bình Phước': return 'binh-phuoc';
-      case 'Hậu Giang': return 'hau-giang';
-      case 'Tiền Giang': return 'tien-giang';
-      case 'Kiên Giang': return 'kien-giang';
-      case 'Đà Lạt': return 'da-lat';
-      default: return 'an-giang';
-    }
-  }
-
-  late final WebViewController tabWebController;
-
-  @override
-  void initState() {
-    super.initState();
-    List<String> currentProvinces = getProvincesForDate(selectedDate);
-    selectedProvince = currentProvinces.isNotEmpty ? currentProvinces[0] : '';
-    
-    tabWebController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(Colors.white);
-
-    updateWebUrl();
-  }
-
-  void updateWebUrl() {
-    String dateSlug = DateFormat('dd-MM-yyyy').format(selectedDate);
-    String provSlug = getProvinceSlug(selectedProvince);
-    String url = 'https://xsmn.mobi/ngay-$dateSlug-$provSlug.html';
-    tabWebController.loadRequest(Uri.parse(url));
   }
 
   bool isTodayOrFuture() {
@@ -172,7 +111,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override Widget build(BuildContext context) {
-    final pages = [smartCheckPage(), webViewPage(), infoPage()];
+    final pages = [smartCheckPage(), infoPage()];
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 36,
@@ -181,11 +120,11 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(width: 6),
           const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('DÒ SỐ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-            Text('Tự động cập nhật • v5.9 Pro', style: TextStyle(fontSize: 8, color: Colors.black54))
+            Text('Tự động cập nhật • v6.0 Pro', style: TextStyle(fontSize: 8, color: Colors.black54))
           ])),
         ]),
         actions: [
-          IconButton(onPressed: () { updateWebUrl(); setState(() {}); }, icon: const Icon(Icons.refresh, size: 16), tooltip: 'Làm mới')
+          IconButton(onPressed: () => setState(() {}), icon: const Icon(Icons.refresh, size: 16), tooltip: 'Làm mới')
         ],
       ),
       body: Column(
@@ -227,16 +166,15 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-          Expanded(child: pages[tab]),
+          Expanded(child: pages[tab > 1 ? 0 : tab]),
         ],
       ),
       bottomNavigationBar: NavigationBar(
         height: 48,
-        selectedIndex: tab > 2 ? 0 : tab,
+        selectedIndex: tab > 1 ? 0 : tab,
         onDestinationSelected: (v) => setState(() => tab = v),
         destinations: const [
           NavigationDestination(icon: Icon(Icons.search_outlined, size: 16), selectedIcon: Icon(Icons.search, size: 16), label: 'Dò ngay'),
-          NavigationDestination(icon: Icon(Icons.public_outlined, size: 16), selectedIcon: Icon(Icons.public, size: 16), label: 'Trực tiếp Web'),
           NavigationDestination(icon: Icon(Icons.calendar_month_outlined, size: 16), label: 'Lịch quay'),
         ],
       ),
@@ -280,7 +218,6 @@ class _HomePageState extends State<HomePage> {
                             List<String> newProvs = getProvincesForDate(picked);
                             selectedProvince = newProvs.isNotEmpty ? newProvs[0] : '';
                             hasSearched = false;
-                            updateWebUrl();
                           });
                         }
                       },
@@ -321,7 +258,6 @@ class _HomePageState extends State<HomePage> {
                               setState(() {
                                 selectedProvince = val;
                                 hasSearched = false;
-                                updateWebUrl();
                               });
                             } 
                           },
@@ -347,7 +283,6 @@ class _HomePageState extends State<HomePage> {
               onPressed: () {
                 setState(() {
                   hasSearched = true;
-                  updateWebUrl();
                 });
               },
               child: const Text('DÒ NGAY KẾT QUẢ', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
@@ -450,28 +385,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget webViewPage() {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          color: const Color(0xFFFFF8E1),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.public, size: 14, color: brandRed),
-              const SizedBox(width: 4),
-              Text('Trang nhà đài trực tiếp: $selectedProvince (${DateFormat('dd/MM/yyyy').format(selectedDate)})', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: ink)),
-            ],
-          ),
-        ),
-        Expanded(
-          child: WebViewWidget(controller: tabWebController),
-        ),
-      ],
     );
   }
 
