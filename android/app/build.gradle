@@ -1,0 +1,19 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+}
+android {
+    namespace "com.vip.xoso"
+    compileSdkVersion flutter.compileSdkVersion
+    defaultConfig {
+        applicationId "com.vip.xoso"
+        minSdkVersion 21
+        targetSdkVersion flutter.targetSdkVersion
+        versionCode 1
+        versionName "6.2"
+    }
+}
+flutter {
+    source '../..'
+}
