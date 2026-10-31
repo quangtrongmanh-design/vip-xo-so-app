@@ -1,15 +1,15 @@
 name: Build Android APK
 
 on:
+  push:
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -20,42 +20,18 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.x'
+          flutter-version: '3.19.0'
           channel: 'stable'
+          cache: true
 
-      - name: Build Perfect APK with Custom App Icon
-        run: |
-          sed -i 's/^name: .*/name: vip_xo_so_app/' pubspec.yaml
+      - name: Install dependencies
+        run: flutter pub get
 
-          rm -rf android
-          flutter create . --platforms=android --org=com.example --project-name=vip_xo_so_app
-
-          sed -i 's/android:label=".*"/android:label="Dò số"/g' android/app/src/main/AndroidManifest.xml
-
-          if [ -f "icon.png" ]; then
-            for md in mipmap-hdpi mipmap-mdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
-              mkdir -p android/app/src/main/res/$md
-              cp icon.png android/app/src/main/res/$md/ic_launcher.png
-            done
-          fi
-
-          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle || true
-
-          # Thêm cấu hình repositories phụ phòng lỗi 403 maven
-          if [ -f "android/build.gradle" ]; then
-            sed -i '/repositories {/a \    google()\n    mavenCentral()' android/build.gradle || true
-          fi
-
-          flutter pub get
-          flutter build apk --debug --no-tree-shake-icons
-
-      - name: Prepare APK Output
-        run: |
-          mkdir -p build/app/outputs/flutter-apk/
-          cp build/app/outputs/apk/debug/app-debug.apk build/app/outputs/flutter-apk/app-release.apk
+      - name: Build APK Debug
+        run: flutter build apk --debug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: app-debug
+          path: build/app/outputs/flutter-apk/app-debug.apk
