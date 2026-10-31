@@ -20,18 +20,17 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
+          flutter-version: '3.16.5'
           channel: 'stable'
           cache: true
 
-      - name: Auto Generate Android Platform
-        run: |
-          flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
+      - name: Create Android Platform
+        run: flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
 
-      - name: Install dependencies
+      - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build APK Debug
+      - name: Build APK without obfuscation
         run: flutter build apk --debug
 
       - name: Upload APK Artifact
