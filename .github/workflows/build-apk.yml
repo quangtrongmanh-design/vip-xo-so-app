@@ -37,7 +37,10 @@ jobs:
           # 3. Tạo mới hoàn toàn dự án Flutter chuẩn tại thư mục gốc
           flutter create . --org com.vip.xoso --project-name vip_xo_so_app
           
-          # 4. Phục hồi lại mã nguồn và cấu hình của anh vào dự án mới
+          # 4. Vá lỗi cấu hình Gradle buildconfig tương thích ngược
+          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
+          
+          # 5. Phục hồi lại mã nguồn và cấu hình của anh vào dự án mới
           rm -rf lib/*
           cp -r backup_data/lib/* lib/
           cp backup_data/pubspec.yaml .
