@@ -70,35 +70,6 @@ class _HomePageState extends State<HomePage> {
 
   List> getLiveResultRows() {
     String dateStr = formatDate(selectedDate);
-
-    if (dateStr == '29/10/2026' && selectedProvince == 'An Giang') {
-      return [
-        {'prize': 'G8', 'number': '96', 'value': '100.000 VNĐ'},
-        {'prize': 'G7', 'number': '107', 'value': '200.000 VNĐ'},
-        {'prize': 'G6', 'number': '0159 - 7500 - 7146', 'value': '400.000 VNĐ'},
-        {'prize': 'G5', 'number': '5786', 'value': '1.000.000 VNĐ'},
-        {'prize': 'G4', 'number': '65401 - 14542 - 69401', 'value': '3.000.000 VNĐ'},
-        {'prize': 'G3', 'number': '58580 - 30357', 'value': '10.000.000 VNĐ'},
-        {'prize': 'G2', 'number': '50872', 'value': '15.000.000 VNĐ'},
-        {'prize': 'G1', 'number': '37166', 'value': '30.000.000 VNĐ'},
-        {'prize': 'ĐB', 'number': '111082', 'value': '2.000.000.000 VNĐ'},
-      ];
-    }
-
-    if (dateStr == '30/10/2026' && selectedProvince == 'Vĩnh Long') {
-      return [
-        {'prize': 'G8', 'number': '65', 'value': '100.000 VNĐ'},
-        {'prize': 'G7', 'number': '069', 'value': '200.000 VNĐ'},
-        {'prize': 'G6', 'number': '7920 - 3216 - 4789', 'value': '400.000 VNĐ'},
-        {'prize': 'G5', 'number': '4927', 'value': '1.000.000 VNĐ'},
-        {'prize': 'G4', 'number': '44709 - 88488 - 83134', 'value': '3.000.000 VNĐ'},
-        {'prize': 'G3', 'number': '10445 - 87975', 'value': '10.000.000 VNĐ'},
-        {'prize': 'G2', 'number': '22225', 'value': '15.000.000 VNĐ'},
-        {'prize': 'G1', 'number': '75695', 'value': '30.000.000 VNĐ'},
-        {'prize': 'ĐB', 'number': '150822', 'value': '2.000.000.000 VNĐ'},
-      ];
-    }
-
     int seed = dateStr.hashCode + selectedProvince.hashCode;
     return [
       {'prize': 'G8', 'number': '${(seed % 90) + 10}', 'value': '100.000 VNĐ'},
@@ -123,7 +94,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(width: 6),
           const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('DÒ SỐ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-            Text('Tự động cập nhật • v6.1 Pro', style: TextStyle(fontSize: 8, color: Colors.black54))
+            Text('Tự động cập nhật • v6.2 Pro', style: TextStyle(fontSize: 8, color: Colors.black54))
           ])),
         ]),
         actions: [
