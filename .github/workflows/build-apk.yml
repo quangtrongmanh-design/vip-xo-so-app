@@ -24,12 +24,15 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Android Scaffold & Config
+      - name: Generate Android Scaffold & Patch Gradle
         run: |
-          # Tự động tạo bộ khung chuẩn Android v2 ngay trên server
+          # 1. Tự động tạo khung Android v2 chuẩn
           flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
           
-          # Vá lỗi cấu hình Gradle buildconfig tương thích ngược
+          # 2. Ghi đè file gradle.properties để tương thích ngược hoàn toàn
+          echo "org.gradle.jvmargs=-Xmx1538M" > android/gradle.properties
+          echo "android.useAndroidX=true" >> android/gradle.properties
+          echo "android.enableJetifier=true" >> android/gradle.properties
           echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
 
       - name: Get Dependencies
