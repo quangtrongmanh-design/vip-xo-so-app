@@ -24,22 +24,17 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Android Scaffold
-        run: |
-          flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
-          flutter config --no-analytics
+      - name: Create Android Platform
+        run: flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
 
-      - name: Get Dependencies
+      - name: Pub Get
         run: flutter pub get
 
-      - name: Clean Build Cache
-        run: flutter clean
-
-      - name: Build APK Clean
-        run: flutter build apk --debug --verbose
+      - name: Build APK Release
+        run: flutter build apk --release --no-pub
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
