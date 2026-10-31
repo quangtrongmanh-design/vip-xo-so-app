@@ -213,7 +213,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(width: 6),
           const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('DÒ SỐ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-            Text('Tự động cập nhật • v4.7 Pro', style: TextStyle(fontSize: 8, color: Colors.black54))
+            Text('Tự động cập nhật • v4.7.1 Pro', style: TextStyle(fontSize: 8, color: Colors.black54))
           ])),
         ]),
         actions: [
@@ -408,7 +408,7 @@ class _HomePageState extends State<HomePage> {
           Container(height: 2.5, width: double.infinity, decoration: BoxDecoration(color: goldAccent, borderRadius: BorderRadius.circular(2))),
           const SizedBox(height: 4),
 
-          // KHUNG KẾT QUẢ NỔI KHỐI: Xanh nước biển pha trắng lan tỏa dạng thanh dài, chữ IN HOA màu đỏ tươi
+          // Khung kết quả nổi khối: Xanh nước biển pha trắng lan tỏa, chữ IN HOA màu đỏ tươi
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(8),
@@ -437,7 +437,7 @@ class _HomePageState extends State<HomePage> {
               style: const TextStyle(
                 fontSize: 10.5, 
                 fontWeight: FontWeight.w900, 
-                color: brandRed, // Chữ màu đỏ tươi
+                color: brandRed, 
                 height: 1.35,
               ),
             ),
@@ -528,7 +528,7 @@ class _HomePageState extends State<HomePage> {
     children: [
       const Text('CÀI ĐẶT', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
       const SizedBox(height: 6),
-      const Card(child: ListTile(dense: true, leading: Icon(Icons.verified, color: brandRed, size: 16), title: Text('Nguồn dữ liệu', style: TextStyle(fontSize: 11)), subtitle: Text('Giao diện v4.7 Pro • Tự động cập nhật', style: TextStyle(fontSize: 9)))),
+      const Card(child: ListTile(dense: true, leading: Icon(Icons.verified, color: brandRed, size: 16), title: Text('Nguồn dữ liệu', style: TextStyle(fontSize: 11)), subtitle: Text('Giao diện v4.7.1 Pro • Tự động cập nhật', style: TextStyle(fontSize: 9)))),
     ],
   );
 }
