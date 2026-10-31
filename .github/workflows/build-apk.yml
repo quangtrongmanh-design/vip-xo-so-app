@@ -25,13 +25,18 @@ jobs:
           cache: true
 
       - name: Generate Android Scaffold
-        run: flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
+        run: |
+          flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
+          flutter config --no-analytics
 
       - name: Get Dependencies
         run: flutter pub get
 
+      - name: Clean Build Cache
+        run: flutter clean
+
       - name: Build APK Clean
-        run: flutter build apk --debug
+        run: flutter build apk --debug --verbose
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
