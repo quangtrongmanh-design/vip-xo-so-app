@@ -25,7 +25,10 @@ jobs:
           cache: true
 
       - name: Create Android Platform
-        run: flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
+        run: |
+          flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
+          # Tự động hạ cấp độ tương thích Gradle xuống mức an toàn tuyệt đối
+          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
 
       - name: Pub Get
         run: flutter pub get
