@@ -24,6 +24,9 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Create Android Scaffold
+        run: flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
+
       - name: Install Dependencies
         run: flutter pub get
 
