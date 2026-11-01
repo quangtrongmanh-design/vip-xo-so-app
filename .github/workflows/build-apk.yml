@@ -24,32 +24,35 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Clean Android Scaffold & Restore Source Code
+      - name: Generate Android Structure & Backup Source
         run: |
-          # 1. Lưu lại thư mục lib và pubspec.yaml của anh vào thư mục dự phòng
+          # 1. Lưu mã nguồn lib và pubspec vào thư mục tạm
           mkdir -p my_backup
           cp -r lib my_backup/
           cp pubspec.yaml my_backup/
           
-          # 2. Tạo mới dự án chuẩn để lấy toàn bộ hệ thống thư mục Android v2
+          # 2. Tạo khung Android v2 chuẩn
           flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
           
-          # 3. Phục hồi hoàn toàn mã nguồn v6.2 Pro nguyên bản của anh vào dự án
+          # 3. Phục hồi mã nguồn v6.2 Pro nguyên bản
           rm -rf lib
           cp -r my_backup/lib .
           cp my_backup/pubspec.yaml .
           
-          # 4. Vá cờ buildconfig tương thích ngược cho Gradle
+          # 4. Bật cờ buildconfig trong gradle.properties
           echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
 
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build APK Debug
-        run: flutter build apk --debug
+      - name: Build APK via Gradle Direct
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
