@@ -24,16 +24,21 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Android Scaffold & Patch Gradle
+      - name: Generate Android Scaffold & Patch AGP
         run: |
           # 1. Tự động tạo khung Android v2 chuẩn
           flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
           
-          # 2. Ghi đè file gradle.properties để tương thích ngược hoàn toàn
+          # 2. Cấu hình gradle.properties
           echo "org.gradle.jvmargs=-Xmx1538M" > android/gradle.properties
           echo "android.useAndroidX=true" >> android/gradle.properties
           echo "android.enableJetifier=true" >> android/gradle.properties
           echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
+
+          # 3. Hạ cấp AGP xuống 7.3.0 và Kotlin xuống 1.7.10 để tương thích hoàn toàn
+          sed -i 's/id "com.android.application" version ".*" apply false/id "com.android.application" version "7.3.0" apply false/g' android/settings.gradle || true
+          sed -i 's/id "org.jetbrains.kotlin.android" version ".*" apply false/id "org.jetbrains.kotlin.android" version "1.7.10" apply false/g' android/settings.gradle || true
+          sed -i 's/com.android.tools.build:gradle:.*/com.android.tools.build:gradle:7.3.0"/g' android/build.gradle || true
 
       - name: Get Dependencies
         run: flutter pub get
