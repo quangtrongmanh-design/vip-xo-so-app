@@ -20,25 +20,51 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.16.5'
+          flutter-version: '3.19.0'
           channel: 'stable'
           cache: true
 
-      - name: Generate Android Scaffold & Patch AGP
+      - name: Create Clean Android Project Structure
         run: |
-          # 1. Tự động tạo khung Android v2 chuẩn
+          # 1. Tạo dự án khung sạch từ Flutter
           flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
           
-          # 2. Cấu hình gradle.properties
-          echo "org.gradle.jvmargs=-Xmx1538M" > android/gradle.properties
-          echo "android.useAndroidX=true" >> android/gradle.properties
-          echo "android.enableJetifier=true" >> android/gradle.properties
-          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
+          # 2. Cập nhật gradle.properties chuẩn
+          cat << 'EOF' > android/gradle.properties
+          org.gradle.jvmargs=-Xmx2048M
+          android.useAndroidX=true
+          android.enableJetifier=true
+          android.defaults.buildfeatures.buildconfig=true
+          EOF
 
-          # 3. Hạ cấp AGP xuống 7.3.0 và Kotlin xuống 1.7.10 để tương thích hoàn toàn
-          sed -i 's/id "com.android.application" version ".*" apply false/id "com.android.application" version "7.3.0" apply false/g' android/settings.gradle || true
-          sed -i 's/id "org.jetbrains.kotlin.android" version ".*" apply false/id "org.jetbrains.kotlin.android" version "1.7.10" apply false/g' android/settings.gradle || true
-          sed -i 's/com.android.tools.build:gradle:.*/com.android.tools.build:gradle:7.3.0"/g' android/build.gradle || true
+          # 3. Ghi đè file settings.gradle chuẩn
+          cat << 'EOF' > android/settings.gradle
+          pluginManagement {
+              def flutterSdkPath = {
+                  def properties = new Properties()
+                  file("local.properties").withInputStream { properties.load(it) }
+                  def flutterSdkPath = properties.getProperty("flutter.sdk")
+                  assert flutterSdkPath != null : "flutter.sdk not set in local.properties"
+                  return flutterSdkPath
+              }()
+
+              includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
+
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+
+          plugins {
+              id "dev.flutter.flutter-plugin-loader" version "1.0.0"
+              id "com.android.application" version "7.4.2" apply false
+              id "org.jetbrains.kotlin.android" version "1.8.22" apply false
+          }
+
+          include ":app"
+          EOF
 
       - name: Get Dependencies
         run: flutter pub get
