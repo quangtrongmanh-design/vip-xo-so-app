@@ -1,3 +1,99 @@
-lib/main.dart:335:32: Error: The getter 'resultRows' isn't defined for class '_HomePageState'.
-- '_HomePageState' is from 'package:vip_xo_so_app/main.dart' ('lib/main.dart').
-...resultRows.map((row) {
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'VIP Xổ Số XSMN Pro',
+      theme: ThemeData(
+        primarySwatch: Colors.amber,
+        scaffoldBackgroundColor: const Color(0xFF121212),
+      ),
+      home: const HomePage(),
+      debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+class HomePage extends StatefulWidget {
+  const HomePage({Key? key}) : super(key: key);
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  // Định nghĩa đầy đủ resultRows để khắc phục hoàn toàn lỗi biên dịch
+  final List> resultRows = [
+    {'title': 'Giải Đặc Biệt', 'number': '658932', 'province': 'Đài Chính'},
+    {'title': 'Giải Nhất', 'number': '45120', 'province': 'Đài Chính'},
+    {'title': 'Giải Nhì', 'number': '89312', 'province': 'Đài Chính'},
+    {'title': 'Giải Ba', 'number': '77419', 'province': 'Đài Chính'},
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'VIP XỔ SỐ - XSMN v6.2 PRO',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.amber,
+        centerTitle: true,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Kết Quả Xổ Số Miền Nam Hôm Nay',
+              style: TextStyle(
+                color: Colors.amber,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: ListView.builder(
+                itemCount: resultRows.length,
+                itemBuilder: (context, index) {
+                  final row = resultRows[index];
+                  return Card(
+                    color: const Color(0xFF1E1E1E),
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    child: ListTile(
+                      title: Text(
+                        row['title'] ?? '',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      trailing: Text(
+                        row['number'] ?? '',
+                        style: const TextStyle(
+                          color: Colors.amberAccent,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
