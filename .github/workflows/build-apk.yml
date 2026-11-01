@@ -24,26 +24,25 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Android Environment & Gradle Properties
+      - name: Generate Separate Android Folder & Patch Config
         run: |
-          # 1. Tạo dự án khung Android chuẩn v2
-          flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
+          # 1. Tạo một dự án tạm bên ngoài để lấy thư mục android chuẩn
+          flutter create temp_app --org com.vip.xoso --project-name vip_xo_so_app
           
-          # 2. Cấu hình gradle.properties tối ưu
-          cat << 'EOF' > android/gradle.properties
-          org.gradle.jvmargs=-Xmx2048M
-          android.useAndroidX=true
-          android.enableJetifier=true
-          android.defaults.buildfeatures.buildconfig=true
-          EOF
+          # 2. Chép thư mục android từ dự án tạm vào dự án chính
+          cp -r temp_app/android ./android
+          rm -rf temp_app
+          
+          # 3. Vá cờ buildconfig vào gradle.properties
+          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
 
       - name: Clean & Get Dependencies
         run: |
           flutter clean
           flutter pub get
 
-      - name: Build APK Debug (Verbose Mode)
-        run: flutter build apk --debug --verbose
+      - name: Build APK Debug
+        run: flutter build apk --debug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
