@@ -24,7 +24,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Clean Project, Icons, Name & Inject Source
+      - name: Generate Clean Project, Custom Icon, Name & Inject Source
         run: |
           # 1. Tạo mới dự án Flutter chuẩn với tên hiển thị "Xổ số"
           flutter create --org com.vip.xoso --project-name vip_xo_so_app temp_app
@@ -32,19 +32,25 @@ jobs:
           cp -r temp_app/.* ./ 2>/dev/null || true
           rm -rf temp_app
           
-          # 2. Cấu hình đổi tên ứng dụng thành "Xổ số" an toàn (không bị lỗi sed)
+          # 2. Cấu hình đổi tên ứng dụng thành "Xổ số" an toàn
           MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
           if [ -f "$MANIFEST_PATH" ]; then
             sed -i 's@android:label="vip_xo_so_app"@android:label="Xổ số"@g' "$MANIFEST_PATH"
           fi
 
-          # 3. Tạo file mã nguồn lib/main.dart tối ưu, chống đứng hình khi mở app
+          # 3. Tạo thư mục chứa icon tùy chỉnh và tự động sinh tệp tin cấu hình mipmap cho Android
+          mkdir -p android/app/src/main/res/mipmap-hdpi
+          mkdir -p android/app/src/main/res/mipmap-mdpi
+          mkdir -p android/app/src/main/res/mipmap-xhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+
+          # 4. Tạo file mã nguồn lib/main.dart tối ưu chống treo logo tuyệt đối
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
 
           void main() {
-            // Bắt buộc dòng này để app mở lên là chạy ngay, không bị kẹt ở màn hình logo
             WidgetsFlutterBinding.ensureInitialized();
             runApp(const MyApp());
           }
@@ -148,11 +154,12 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build Pure Gradle APK
+      - name: Clean & Build Pure Gradle APK
         run: |
           flutter precache --android
           cd android
           chmod +x gradlew
+          ./gradlew clean
           ./gradlew assembleDebug --no-daemon -x compileFlutterBuildDebug
 
       - name: Upload APK Artifact
