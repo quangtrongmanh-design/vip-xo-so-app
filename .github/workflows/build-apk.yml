@@ -24,15 +24,12 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Project & Inject v6.2 Pro Source
+      - name: Build Standalone Flutter App
         run: |
-          # 1. Tạo dự án chuẩn để lấy hệ thống thư mục android
-          flutter create --org com.vip.xoso --project-name vip_xo_so_app temp_project
-          cp -r temp_project/android ./
-          cp temp_project/pubspec.yaml ./
-          rm -rf temp_project
+          # 1. Tạo hoàn toàn mới dự án chuẩn sạch sẽ tại thư mục hiện tại
+          flutter create . --org com.vip.xoso --project-name vip_xo_so_app --platforms=android
           
-          # 2. Tiêm file lib/main.dart v6.2 Pro chuẩn chỉnh có đầy đủ resultRows
+          # 2. Ghi đè trực tiếp file lib/main.dart chuẩn v6.2 Pro có đầy đủ resultRows
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -135,14 +132,8 @@ jobs:
           }
           EOF
 
-          # 3. Bật cờ tương thích buildconfig
-          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
-
-      - name: Get Dependencies
-        run: flutter pub get
-
-      - name: Build APK Direct
-        run: flutter build apk --debug --no-pub
+          # 3. Build file APK trực tiếp
+          flutter build apk --debug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
