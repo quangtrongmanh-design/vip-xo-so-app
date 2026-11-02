@@ -147,10 +147,10 @@ jobs:
 
       - name: Upload and Get Direct Download Link
         run: |
-          # Đường dẫn chuẩn của Gradle build debug APK
-          APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
+          # Tự động quét toàn bộ thư mục dự án để tìm file app-debug.apk chính xác nhất
+          APK_PATH=$(find . -name "app-debug.apk" | head -n 1)
 
-          if [ -f "$APK_PATH" ]; then
+          if [ -n "$APK_PATH" ] && [ -f "$APK_PATH" ]; then
             echo "===================================================="
             echo "🚀 ĐÃ TÌM THẤY FILE APK TẠI: $APK_PATH"
             echo "🚀 ĐANG TẢI LÊN HỆ THỐNG CHIA SẺ TRỰC TUYẾN..."
@@ -161,6 +161,6 @@ jobs:
             echo "$DOWNLOAD_URL"
             echo "===================================================="
           else
-            echo "❌ Không tìm thấy file APK!"
+            echo "❌ Không tìm thấy file APK trên hệ thống!"
             exit 1
           fi
