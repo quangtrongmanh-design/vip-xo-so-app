@@ -138,21 +138,19 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build APK via Flutter CLI Debug
-        run: flutter build apk --debug --verbose
+      - name: Build Pure Gradle APK
+        run: |
+          flutter precache --android
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon -x compileFlutterBuildDebug
 
       - name: Upload and Get Direct Download Link
         run: |
-          # Tìm kiếm file APK ở cả hai đường dẫn chuẩn của Flutter và Gradle
-          if [ -f "build/app/outputs/flutter-apk/app-debug.apk" ]; then
-            APK_PATH="build/app/outputs/flutter-apk/app-debug.apk"
-          elif [ -f "android/app/build/outputs/apk/debug/app-debug.apk" ]; then
-            APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
-          else
-            APK_PATH=$(find . -name "app-debug.apk" | head -n 1)
-          fi
+          # Đường dẫn chuẩn của Gradle build debug APK
+          APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
 
-          if [ -n "$APK_PATH" ] && [ -f "$APK_PATH" ]; then
+          if [ -f "$APK_PATH" ]; then
             echo "===================================================="
             echo "🚀 ĐÃ TÌM THẤY FILE APK TẠI: $APK_PATH"
             echo "🚀 ĐANG TẢI LÊN HỆ THỐNG CHIA SẺ TRỰC TUYẾN..."
@@ -163,6 +161,6 @@ jobs:
             echo "$DOWNLOAD_URL"
             echo "===================================================="
           else
-            echo "❌ Không tìm thấy file APK trên hệ thống!"
+            echo "❌ Không tìm thấy file APK!"
             exit 1
           fi
