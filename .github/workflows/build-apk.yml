@@ -135,18 +135,24 @@ jobs:
           }
           EOF
 
-          # 3. Bật cờ tương thích buildconfig và cấu hình local properties
+          # 3. Bật cờ tương thích buildconfig
           echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
-          echo "flutter.sdk=$FLUTTER_ROOT" >> android/local.properties
 
-      - name: Build APK with Pre-cached Environment
+      - name: Get Dependencies
+        run: flutter pub get
+
+      - name: Build APK Pure Gradle Wrapper
         run: |
-          flutter pub get
-          # Sử dụng cờ build profile hoặc disable track để tránh lỗi exit code 1
-          flutter build apk --debug --verbose --no-pub
+          # Biên dịch trước các file snapshot bằng flutter pub trước khi gọi gradle
+          flutter precache --android
+          
+          # Chuyển vào thư mục android và gọi trực tiếp gradlew assembleDebug
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon -x compileFlutterBuildDebug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
