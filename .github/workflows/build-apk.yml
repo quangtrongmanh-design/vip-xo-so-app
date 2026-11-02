@@ -141,18 +141,11 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build App Bundle / APK via Gradle Direct
-        run: |
-          # Biên dịch trước mã nguồn Dart sang AOT snapshot bằng flutter
-          flutter build appbundle --debug --no-pub
-          
-          # Hoặc build APK trực tiếp qua gradle wrapper
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+      - name: Build APK via Flutter CLI with --verbose
+        run: flutter build apk --debug --verbose
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
