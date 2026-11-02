@@ -24,7 +24,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Clean Project, Name "Dò số" & Remove Splash Freeze
+      - name: Generate Clean Project, Name "Dò số" & Inject UI Design
         run: |
           # 1. Tạo mới dự án Flutter chuẩn
           flutter create --org com.vip.xoso --project-name vip_xo_so_app temp_app
@@ -32,20 +32,20 @@ jobs:
           cp -r temp_app/.* ./ 2>/dev/null || true
           rm -rf temp_app
           
-          # 2. Đổi tên ứng dụng hiển thị thành "Dò số" trong AndroidManifest.xml
+          # 2. Đổi tên ứng dụng thành "Dò số" trong AndroidManifest.xml
           MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
           if [ -f "$MANIFEST_PATH" ]; then
             sed -i 's@android:label="vip_xo_so_app"@android:label="Dò số"@g' "$MANIFEST_PATH"
           fi
 
-          # 3. Xóa bỏ hoàn toàn theme màn hình chờ (splash screen) để chống treo logo khi mở app
+          # 3. Xóa bỏ theme chờ cũ để chống treo logo
           STYLES_PATH="android/app/src/main/res/values/styles.xml"
           if [ -f "$STYLES_PATH" ]; then
             sed -i '/<item name="android:windowBackground">/d' "$STYLES_PATH"
             sed -i '/<item name="flutterEmbedding">/d' "$STYLES_PATH"
           fi
 
-          # 4. Tạo file mã nguồn lib/main.dart tối ưu khởi chạy trực tiếp
+          # 4. Tiêm mã nguồn giao diện chuẩn chỉnh như ảnh mẫu của anh vào lib/main.dart
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -63,86 +63,366 @@ jobs:
               return MaterialApp(
                 title: 'Dò số',
                 theme: ThemeData(
-                  primarySwatch: Colors.amber,
-                  scaffoldBackgroundColor: const Color(0xFF121212),
+                  primarySwatch: Colors.teal,
+                  scaffoldBackgroundColor: const Color(0xFF0F252D), // Xanh cổ vịt tối chuẩn mẫu
                 ),
-                home: const HomePage(),
+                home: const XoSoHomePage(),
                 debugShowCheckedModeBanner: false,
               );
             }
           }
 
-          class HomePage extends StatefulWidget {
-            const HomePage({Key? key}) : super(key: key);
+          class XoSoHomePage extends StatefulWidget {
+            const XoSoHomePage({Key? key}) : super(key: key);
 
             @override
-            State<HomePage> createState() => _HomePageState();
+            State<XoSoHomePage> createState() => _XoSoHomePageState();
           }
 
-          class _HomePageState extends State<HomePage> {
-            final List> resultRows = [
-              {'title': 'Giải Đặc Biệt', 'number': '658932', 'province': 'Đài Chính'},
-              {'title': 'Giải Nhất', 'number': '45120', 'province': 'Đài Chính'},
-              {'title': 'Giải Nhì', 'number': '89312', 'province': 'Đài Chính'},
-              {'title': 'Giải Ba', 'number': '77419', 'province': 'Đài Chính'},
+          class _XoSoHomePageState extends State<XoSoHomePage> {
+            bool hasSearched = false;
+            int _currentIndex = 0;
+
+            final List> lotteryResults = [
+              {'giai': 'G8', 'so': '0197838', 'tien': '100.000 VNĐ'},
+              {'giai': 'G7', 'so': '1967326', 'tien': '200.000 VNĐ'},
+              {'giai': 'G6', 'so': '2885080', 'tien': '400.000 VNĐ'},
+              {'giai': 'G5', 'so': '1252951', 'tien': '1.000.000 VNĐ'},
+              {'giai': 'G4', 'so': '2382333', 'tien': '3.000.000 VNĐ'},
+              {'giai': 'G3', 'so': '1887886', 'tien': '10.000.000 VNĐ'},
+              {'giai': 'G2', 'so': '1847925', 'tien': '15.000.000 VNĐ'},
+              {'giai': 'G1', 'so': '2215488', 'tien': '30.000.000 VNĐ'},
+              {'giai': 'ĐB', 'so': '30102026', 'tien': '2.000.000.000 VNĐ'},
             ];
 
             @override
             Widget build(BuildContext context) {
               return Scaffold(
-                appBar: AppBar(
-                  title: const Text(
-                    'DÒ SỐ - XSMN v6.2 PRO',
-                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-                  ),
-                  backgroundColor: Colors.amber,
-                  centerTitle: true,
-                ),
-                body: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                backgroundColor: const Color(0xFF102830),
+                body: SafeArea(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Kết Quả Xổ Số Miền Nam Hôm Nay',
-                        style: TextStyle(
-                          color: Colors.amber,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                      // Header App
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        color: const Color(0xFF13323B),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.redAccent,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Text('🎟️', style: TextStyle(fontSize: 16)),
+                                ),
+                                const SizedBox(width: 8),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: const [
+                                    Text(
+                                      'DÒ SỐ',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                                    Text(
+                                      'v5.4 Pro • Tự động cập nhật',
+                                      style: TextStyle(color: Colors.white60, fontSize: 10),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: const [
+                                Icon(Icons.refresh, color: Colors.white70, size: 20),
+                                SizedBox(width: 16),
+                                Icon(Icons.settings, color: Colors.white70, size: 20),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      Expanded(
-                        child: ListView.builder(
-                          itemCount: resultRows.length,
-                          itemBuilder: (context, index) {
-                            final row = resultRows[index];
-                            return Card(
-                              color: const Color(0xFF1E1E1E),
-                              margin: const EdgeInsets.symmetric(vertical: 6),
-                              child: ListTile(
-                                title: Text(
-                                  row['title'] ?? '',
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontWeight: FontWeight.w500,
+
+                      // Banner VIP COFFEE QC
+                      Container(
+                        color: const Color(0xFFFFF3CD),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Row(
+                                children: const [
+                                  Text('🔥 ', style: TextStyle(fontSize: 12)),
+                                  Expanded(
+                                    child: Text(
+                                      'VIP COFFEE – Liên hệ QC: 0819914199',
+                                      style: TextStyle(
+                                        color: Color(0xFF856404),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
-                                ),
-                                trailing: Text(
-                                  row['number'] ?? '',
-                                  style: const TextStyle(
-                                    color: Colors.amberAccent,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFC107),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                'LIÊN HỆ',
+                                style: TextStyle(
+                                  color: Colors.black87,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            );
-                          },
+                            ),
+                            const SizedBox(width: 6),
+                            const Icon(Icons.close, size: 14, color: Color(0xFF856404)),
+                          ],
+                        ),
+                      ),
+
+                      // Khung chọn Ngày & Đài
+                      Container(
+                        margin: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF183B46),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.white12),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('Ngày', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                                      const SizedBox(height: 4),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: const [
+                                            Text('27 / 10 / 2026', style: TextStyle(color: Colors.black87, fontSize: 13)),
+                                            Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('Đài', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                                      const SizedBox(height: 4),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: const [
+                                            Text('An Giang', style: TextStyle(color: Colors.black87, fontSize: 13, fontWeight: FontWeight.bold)),
+                                            Icon(Icons.arrow_drop_down, color: Colors.grey),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF1976D2), // Xanh dương đậm đúng mẫu
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    hasSearched = true;
+                                  });
+                                },
+                                child: const Text(
+                                  'DÒ NGAY',
+                                  style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 1),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Nội dung kết quả hoặc trạng thái chờ
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: !hasSearched
+                              ? Center(
+                                  child: Container(
+                                    padding: const EdgeInsets.all(20),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF163742),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: const Color(0xFFD4AF37), width: 1.5),
+                                    ),
+                                    child: const Text(
+                                      '⏳ ĐANG CẬP NHẬT KẾT QUẢ,\nVUI LÒNG CHỜ TRONG GIÂY LÁT...',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: Color(0xFFFFD700),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        height: 1.5,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : SingleChildScrollView(
+                                  child: Column(
+                                    children: [
+                                      Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.symmetric(vertical: 8),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFE0E0E0),
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(color: const Color(0xFFD4AF37)),
+                                        ),
+                                        child: const Text(
+                                          'KẾT QUẢ ĐÃ CÔNG BỐ\n(AN GIANG)',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: Color(0xFF8B0000),
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Table(
+                                        border: TableBorder.all(color: Colors.white24),
+                                        columnWidths: const {
+                                          0: FlexColumnWidth(1.2),
+                                          1: FlexColumnWidth(2.5),
+                                          2: FlexColumnWidth(2.8),
+                                        },
+                                        children: [
+                                          TableRow(
+                                            decoration: const BoxDecoration(color: Color(0xFF13323B)),
+                                            children: const [
+                                              Padding(padding: EdgeInsets.all(8), child: Text('Giải', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
+                                              Padding(padding: EdgeInsets.all(8), child: Text('Kết quả', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
+                                              Padding(padding: EdgeInsets.all(8), child: Text('Trị giá', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
+                                            ],
+                                          ),
+                                          for (var item in lotteryResults)
+                                            TableRow(
+                                              decoration: BoxDecoration(
+                                                color: item['giai'] == 'ĐB' ? const Color(0xFF2A2000) : const Color(0xFF163742),
+                                              ),
+                                              children: [
+                                                Padding(
+                                                  padding: const EdgeInsets.all(8),
+                                                  child: Text(item['giai']!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                                                ),
+                                                Padding(
+                                                  padding: const EdgeInsets.all(8),
+                                                  child: Text(
+                                                    item['so']!,
+                                                    style: TextStyle(
+                                                      color: item['giai'] == 'ĐB' ? const Color(0xFFFF5252) : const Color(0xFFFFD700),
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: item['giai'] == 'ĐB' ? 15 : 13,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                ),
+                                                Padding(
+                                                  padding: const EdgeInsets.all(8),
+                                                  child: Text(item['tien']!, style: const TextStyle(color: Colors.white70, fontSize: 11), textAlign: TextAlign.center),
+                                                ),
+                                              ],
+                                            ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                        ),
+                      ),
+
+                      // Thanh điều hướng đáy (Bottom Navigation)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        color: const Color(0xFF0C1D23),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildNavItem(Icons.search, 'Dò ngay', 0),
+                            _buildNavItem(Icons.language, 'Trực tiếp Web', 1),
+                            _buildNavItem(Icons.calendar_month, 'Lịch quay', 2),
+                          ],
                         ),
                       ),
                     ],
                   ),
+                ),
+              );
+            }
+
+            Widget _buildNavItem(IconData icon, String label, int index) {
+              bool isSelected = _currentIndex == index;
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _currentIndex = index;
+                  });
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(icon, color: isSelected ? const Color(0xFFFFD700) : Colors.white60, size: 22),
+                    const SizedBox(height: 2),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        color: isSelected ? const Color(0xFFFFD700) : Colors.white60,
+                        fontSize: 11,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ],
                 ),
               );
             }
