@@ -426,14 +426,18 @@ jobs:
           }
           EOF
 
-      - name: Get Flutter Packages
+      - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build APK via Flutter Headless Compile & Gradle
+      - name: Build Bundle & Pure Gradle APK
         run: |
-          # Biên dịch trước các tài nguyên Dart dưới nền không cần UI
-          flutter precache --android
-          flutter build apk --debug --no-pub --target-platform android-arm,android-arm64
+          # Biên dịch trước các tài nguyên Dart dưới dạng bundle không kích hoạt emulator
+          flutter build bundle --target-platform android-arm,android-arm64
+          
+          # Đóng gói APK hoàn toàn bằng Gradle thuần túy không qua trình biên dịch CLI lỗi
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon -x compileFlutterBuildDebug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
