@@ -11,11 +11,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Java (Java 11)
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '11'
+          java-version: '17'
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -24,12 +24,17 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Create Clean Project & Inject Source
+      - name: Generate Clean Project & Inject Source
         run: |
-          # 1. Tạo dự án Flutter chuẩn sạch sẽ tại thư mục hiện tại
-          flutter create . --org com.vip.xoso --project-name vip_xo_so_app --platforms=android
+          # 1. Tạo dự án Flutter hoàn toàn mới tại thư mục tạm
+          flutter create --org com.vip.xoso --project-name vip_xo_so_app temp_app
           
-          # 2. Ghi đè trực tiếp file lib/main.dart chuẩn v6.2 Pro có đầy đủ resultRows
+          # 2. Xóa sạch các file cũ và copy toàn bộ dự án mới ra gốc
+          cp -r temp_app/* ./
+          cp -r temp_app/.* ./ 2>/dev/null || true
+          rm -rf temp_app
+          
+          # 3. Ghi đè file lib/main.dart v6.2 Pro chuẩn chỉnh chứa đầy đủ resultRows
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -132,19 +137,17 @@ jobs:
           }
           EOF
 
-          # 3. Chạy pre-build bằng flutter để biên dịch mã Dart sang C++ / snapshot trước
-          flutter precache --android
-          flutter pub get
+          # 4. Bật cờ tương thích buildconfig cho Gradle
+          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
 
-      - name: Build APK Direct via Gradle
-        run: |
-          # Gọi trực tiếp Gradle wrapper để đóng gói ứng dụng mượt mà tuyệt đối
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build APK Debug
+        run: flutter build apk --debug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
