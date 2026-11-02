@@ -24,7 +24,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Clean Project, Fix Splash Freeze & Inject UI
+      - name: Generate Project, Name "Dò số" & Inject UI
         run: |
           # 1. Tạo mới dự án Flutter chuẩn
           flutter create --org com.vip.xoso --project-name vip_xo_so_app temp_app
@@ -38,7 +38,7 @@ jobs:
             sed -i 's@android:label="vip_xo_so_app"@android:label="Dò số"@g' "$MANIFEST_PATH"
           fi
 
-          # 3. Xóa bỏ theme màn hình chờ cũ trong Android để chống treo logo
+          # 3. Xóa bỏ hoàn toàn cấu hình Splash Screen / windowBackground gây treo logo
           STYLES_PATH="android/app/src/main/res/values/styles.xml"
           if [ -f "$STYLES_PATH" ]; then
             sed -i '/<item name="android:windowBackground">/d' "$STYLES_PATH"
@@ -429,18 +429,11 @@ jobs:
           }
           EOF
 
-          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
-
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Clean & Build Pure Gradle APK
-        run: |
-          flutter precache --android
-          cd android
-          chmod +x gradlew
-          ./gradlew clean
-          ./gradlew assembleDebug --no-daemon -x compileFlutterBuildDebug
+      - name: Build APK via Flutter CLI
+        run: flutter build apk --debug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
