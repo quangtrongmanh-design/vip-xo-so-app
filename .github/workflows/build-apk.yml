@@ -20,16 +20,19 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
+          flutter-version: '3.16.5'
           channel: 'stable'
           cache: true
 
       - name: Build Standalone Flutter App
         run: |
-          # 1. Tạo hoàn toàn mới dự án chuẩn sạch sẽ tại thư mục hiện tại
+          # 1. Tạo dự án Flutter chuẩn sạch sẽ tại thư mục hiện tại
           flutter create . --org com.vip.xoso --project-name vip_xo_so_app --platforms=android
           
-          # 2. Ghi đè trực tiếp file lib/main.dart chuẩn v6.2 Pro có đầy đủ resultRows
+          # 2. Bật cờ tương thích BuildConfig trong gradle.properties
+          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
+
+          # 3. Ghi đè trực tiếp file lib/main.dart chuẩn v6.2 Pro có đầy đủ resultRows
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -132,7 +135,7 @@ jobs:
           }
           EOF
 
-          # 3. Build file APK trực tiếp
+          # 4. Build file APK trực tiếp mượt mà
           flutter build apk --debug
 
       - name: Upload APK Artifact
