@@ -24,14 +24,17 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Rebuild Project Structure & Inject Full Code
+      - name: Generate Clean Project, Name "Dò số" & Inject UI Design
         run: |
-          # 1. Dọn dẹp các tệp tạm cũ
-          rm -rf lib android ios test pubspec.yaml pubspec.lock 2>/dev/null || true
-
-          # 2. Khởi tạo lại dự án Flutter sạch với tên gói chuẩn
-          flutter create --org com.vip.xoso --project-name vip_xo_so_app .
+          # 1. Tạo mới dự án Flutter chuẩn hoàn toàn trong thư mục tạm
+          flutter create --org com.vip.xoso --project-name vip_xo_so_app temp_project
           
+          # 2. Xóa các file cũ ở thư mục gốc và chuyển code mới ra
+          rm -rf lib android ios test pubspec.yaml pubspec.lock 2>/dev/null || true
+          cp -r temp_project/* ./
+          cp -r temp_project/.* ./ 2>/dev/null || true
+          rm -rf temp_project
+
           # 3. Đổi tên ứng dụng thành "Dò số" trong AndroidManifest.xml
           MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
           if [ -f "$MANIFEST_PATH" ]; then
@@ -45,7 +48,10 @@ jobs:
             sed -i '/<item name="flutterEmbedding">/d' "$STYLES_PATH"
           fi
 
-          # 5. Tiêm mã nguồn giao diện chuẩn theo đúng hình mẫu vào lib/main.dart
+          # 5. Cấu hình buildconfig cho Gradle
+          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
+
+          # 6. Tiêm mã nguồn giao diện chuẩn chỉnh đúng như mẫu vào lib/main.dart
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -429,11 +435,16 @@ jobs:
           }
           EOF
 
-      - name: Fetch Dependencies
+      - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build APK Debug
-        run: flutter build apk --debug
+      - name: Build Pure Gradle APK Debug
+        run: |
+          flutter precache --android
+          cd android
+          chmod +x gradlew
+          ./gradlew clean
+          ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
