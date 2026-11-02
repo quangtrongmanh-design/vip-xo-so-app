@@ -24,17 +24,15 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Initialize Clean Android Project & Inject Source
+      - name: Setup Project & Inject v6.2 Pro Source
         run: |
-          # 1. Tạo một ứng dụng Flutter mới hoàn toàn sạch sẽ ở thư mục tạm với tên chuẩn
+          # 1. Tạo dự án tạm chuẩn để lấy toàn bộ hệ thống android và gradle
           flutter create --org com.vip.xoso --project-name vip_xo_so_app temp_project
-          
-          # 2. Mang toàn bộ thư mục android và các file cấu hình chuẩn sang thư mục gốc hiện tại
           cp -r temp_project/android ./
           cp temp_project/pubspec.yaml ./
           rm -rf temp_project
           
-          # 3. Tiêm mã nguồn v6.2 Pro chuẩn chỉnh có đầy đủ resultRows vào thư mục lib
+          # 2. Tiêm file lib/main.dart v6.2 Pro chuẩn chỉnh có đầy đủ resultRows
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -137,17 +135,20 @@ jobs:
           }
           EOF
 
-          # 4. Bật cờ buildconfig tương thích ngược cho Gradle
+          # 3. Bật cờ tương thích buildconfig
           echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
 
-      - name: Install Dependencies
+      - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build APK Debug
-        run: flutter build apk --debug
+      - name: Build APK via Gradle Direct
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
