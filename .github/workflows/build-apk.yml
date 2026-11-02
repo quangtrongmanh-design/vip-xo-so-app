@@ -24,28 +24,28 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Clean Project, Custom Icon, Name & Inject Source
+      - name: Generate Clean Project, Name "Dò số" & Remove Splash Freeze
         run: |
-          # 1. Tạo mới dự án Flutter chuẩn với tên hiển thị "Xổ số"
+          # 1. Tạo mới dự án Flutter chuẩn
           flutter create --org com.vip.xoso --project-name vip_xo_so_app temp_app
           cp -r temp_app/* ./
           cp -r temp_app/.* ./ 2>/dev/null || true
           rm -rf temp_app
           
-          # 2. Cấu hình đổi tên ứng dụng thành "Xổ số" an toàn
+          # 2. Đổi tên ứng dụng hiển thị thành "Dò số" trong AndroidManifest.xml
           MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
           if [ -f "$MANIFEST_PATH" ]; then
-            sed -i 's@android:label="vip_xo_so_app"@android:label="Xổ số"@g' "$MANIFEST_PATH"
+            sed -i 's@android:label="vip_xo_so_app"@android:label="Dò số"@g' "$MANIFEST_PATH"
           fi
 
-          # 3. Tạo thư mục chứa icon tùy chỉnh và tự động sinh tệp tin cấu hình mipmap cho Android
-          mkdir -p android/app/src/main/res/mipmap-hdpi
-          mkdir -p android/app/src/main/res/mipmap-mdpi
-          mkdir -p android/app/src/main/res/mipmap-xhdpi
-          mkdir -p android/app/src/main/res/mipmap-xxhdpi
-          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+          # 3. Xóa bỏ hoàn toàn theme màn hình chờ (splash screen) để chống treo logo khi mở app
+          STYLES_PATH="android/app/src/main/res/values/styles.xml"
+          if [ -f "$STYLES_PATH" ]; then
+            sed -i '/<item name="android:windowBackground">/d' "$STYLES_PATH"
+            sed -i '/<item name="flutterEmbedding">/d' "$STYLES_PATH"
+          fi
 
-          # 4. Tạo file mã nguồn lib/main.dart tối ưu chống treo logo tuyệt đối
+          # 4. Tạo file mã nguồn lib/main.dart tối ưu khởi chạy trực tiếp
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -61,7 +61,7 @@ jobs:
             @override
             Widget build(BuildContext context) {
               return MaterialApp(
-                title: 'Xổ số',
+                title: 'Dò số',
                 theme: ThemeData(
                   primarySwatch: Colors.amber,
                   scaffoldBackgroundColor: const Color(0xFF121212),
@@ -92,7 +92,7 @@ jobs:
               return Scaffold(
                 appBar: AppBar(
                   title: const Text(
-                    'XỔ SỐ - XSMN v6.2 PRO',
+                    'DÒ SỐ - XSMN v6.2 PRO',
                     style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                   ),
                   backgroundColor: Colors.amber,
