@@ -24,12 +24,12 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Android Platform & Inject v6.2 Pro Source
+      - name: Create Android Scaffold & Inject v6.2 Pro Source
         run: |
-          # 1. Tuma Android project structure v2 dik tak siamna
+          # 1. Tạo khung Android v2 chuẩn
           flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
           
-          # 2. Code dik tak `resultRows` telhna v6.2 Pro `main.dart` dah lut nghal rawh
+          # 2. Tiêm mã nguồn lib/main.dart v6.2 Pro chuẩn chỉnh có đầy đủ resultRows
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -132,14 +132,15 @@ jobs:
           }
           EOF
 
-          # 3. Gradle buildconfig setting belh rawh
+          # 3. Vá cấu hình gradle.properties để tương thích tuyệt đối
           echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
+          echo "org.gradle.jvmargs=-Xmx2048M" >> android/gradle.properties
 
       - name: Install Dependencies
         run: flutter pub get
 
       - name: Build APK Debug
-        run: flutter build apk --debug
+        run: flutter build apk --debug --verbose
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
