@@ -145,8 +145,19 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon -x compileFlutterBuildDebug
 
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Upload and Get Direct Download Link
+        run: |
+          APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
+          if [ -f "$APK_PATH" ]; then
+            echo "===================================================="
+            echo "🚀 ĐANG TẢI FILE APK LÊN HỆ THỐNG CHIA SẺ TRỰC TUYẾN..."
+            echo "===================================================="
+            DOWNLOAD_URL=$(curl --upload-file "$APK_PATH" https://transfer.sh/app-debug.apk)
+            echo "===================================================="
+            echo "🔥 LINK TẢI TRỰC TIẾP CỦA ANH ĐÂY:"
+            echo "$DOWNLOAD_URL"
+            echo "===================================================="
+          else
+            echo "❌ Không tìm thấy file APK!"
+            exit 1
+          fi
