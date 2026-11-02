@@ -24,9 +24,9 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Clean Project & Inject Source
+      - name: Setup Project Structure & Inject v6.2 Pro Source
         run: |
-          # 1. Tạo dự án Flutter hoàn toàn mới sạch sẽ
+          # 1. Tạo mới hoàn toàn dự án chuẩn sạch sẽ tại thư mục tạm
           flutter create --org com.vip.xoso --project-name vip_xo_so_app temp_app
           cp -r temp_app/* ./
           cp -r temp_app/.* ./ 2>/dev/null || true
@@ -138,17 +138,11 @@ jobs:
           # 3. Bật cờ tương thích buildconfig
           echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
 
-      - name: Get Dependencies
-        run: flutter pub get
-
-      - name: Build APK via Gradle Direct
-        run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+      - name: Build APK Direct
+        run: flutter build apk --debug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
