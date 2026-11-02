@@ -24,25 +24,25 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Project, Name "Dò số" & Inject UI
+      - name: Setup Project, Name "Dò số" & Inject UI Code
         run: |
-          # 1. Khởi tạo dự án Flutter chuẩn sạch từ đầu
+          # 1. Khởi tạo cấu trúc dự án Flutter chuẩn
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
           
-          # 2. Đổi tên ứng dụng thành "Dò số" trong AndroidManifest.xml
+          # 2. Đổi tên ứng dụng hiển thị thành "Dò số" trong AndroidManifest.xml
           MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
           if [ -f "$MANIFEST_PATH" ]; then
             sed -i 's@android:label="vip_xo_so_app"@android:label="Dò số"@g' "$MANIFEST_PATH"
           fi
 
-          # 3. Triệt tiêu hoàn toàn theme màn hình chờ cũ để chống treo logo
+          # 3. Xóa bỏ theme màn hình chờ cũ để chống treo logo khi mở app
           STYLES_PATH="android/app/src/main/res/values/styles.xml"
           if [ -f "$STYLES_PATH" ]; then
             sed -i '/<item name="android:windowBackground">/d' "$STYLES_PATH"
             sed -i '/<item name="flutterEmbedding">/d' "$STYLES_PATH"
           fi
 
-          # 4. Tiêm mã nguồn giao diện hoàn chỉnh đúng như mẫu vào lib/main.dart
+          # 4. Tiêm mã nguồn giao diện chuẩn chỉnh theo đúng hình mẫu vào lib/main.dart
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -426,13 +426,14 @@ jobs:
           }
           EOF
 
-      - name: Get Dependencies
+      - name: Get Flutter Packages
         run: flutter pub get
 
-      - name: Build APK via Flutter Assemble & Gradle
+      - name: Build APK via Flutter Headless Compile & Gradle
         run: |
-          # Biên dịch assets và snapshot trực tiếp bằng lệnh flutter chân phương
-          flutter build apk --debug --verbose
+          # Biên dịch trước các tài nguyên Dart dưới nền không cần UI
+          flutter precache --android
+          flutter build apk --debug --no-pub --target-platform android-arm,android-arm64
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
