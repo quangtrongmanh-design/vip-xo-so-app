@@ -26,23 +26,16 @@ jobs:
 
       - name: Generate Clean Project, Icons, Name & Inject Source
         run: |
-          # 1. Tạo mới dự án Flutter chuẩn
+          # 1. Tạo mới dự án Flutter chuẩn với tên hiển thị "Xổ số"
           flutter create --org com.vip.xoso --project-name vip_xo_so_app temp_app
           cp -r temp_app/* ./
           cp -r temp_app/.* ./ 2>/dev/null || true
           rm -rf temp_app
           
-          # 2. Cấu hình đổi tên ứng dụng thành "Xổ số" trong AndroidManifest.xml
+          # 2. Cấu hình đổi tên ứng dụng thành "Xổ số" an toàn (không bị lỗi sed)
           MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
           if [ -f "$MANIFEST_PATH" ]; then
-            sed -i 's/android:label="vip_xo_so_app"/android:label="Xổ số"/g' "$MANIFEST_PATH"
-            sed -i 's/android:label="@string/app_name"/android:label="Xổ số"/g' "$MANIFEST_PATH"
-          fi
-          
-          # Cập nhật tệp strings.xml để đảm bảo tên hiển thị chuẩn xác
-          STRINGS_PATH="android/app/src/main/res/values/strings.xml"
-          if [ -f "$STRINGS_PATH" ]; then
-            sed -i 's/<string name="app_name">.*<\/string>/<string name="app_name">Xổ số<\/string>/g' "$STRINGS_PATH"
+            sed -i 's@android:label="vip_xo_so_app"@android:label="Xổ số"@g' "$MANIFEST_PATH"
           fi
 
           # 3. Tạo file mã nguồn lib/main.dart tối ưu, chống đứng hình khi mở app
@@ -51,6 +44,7 @@ jobs:
           import 'package:flutter/material.dart';
 
           void main() {
+            // Bắt buộc dòng này để app mở lên là chạy ngay, không bị kẹt ở màn hình logo
             WidgetsFlutterBinding.ensureInitialized();
             runApp(const MyApp());
           }
