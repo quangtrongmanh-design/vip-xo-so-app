@@ -24,7 +24,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Clean Project, Name "Dò số" & Inject UI Design
+      - name: Generate Clean Project & Fix White Screen
         run: |
           # 1. Tạo mới dự án Flutter chuẩn
           flutter create --org com.vip.xoso --project-name vip_xo_so_app temp_app
@@ -38,14 +38,14 @@ jobs:
             sed -i 's@android:label="vip_xo_so_app"@android:label="Dò số"@g' "$MANIFEST_PATH"
           fi
 
-          # 3. Xóa bỏ theme chờ cũ để chống treo logo
+          # 3. Xóa bỏ theme chờ cũ
           STYLES_PATH="android/app/src/main/res/values/styles.xml"
           if [ -f "$STYLES_PATH" ]; then
             sed -i '/<item name="android:windowBackground">/d' "$STYLES_PATH"
             sed -i '/<item name="flutterEmbedding">/d' "$STYLES_PATH"
           fi
 
-          # 4. Tiêm mã nguồn giao diện chuẩn chỉnh như ảnh mẫu của anh vào lib/main.dart
+          # 4. Tiêm mã nguồn giao diện hoàn chỉnh chống màn hình trắng vào lib/main.dart
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -64,7 +64,7 @@ jobs:
                 title: 'Dò số',
                 theme: ThemeData(
                   primarySwatch: Colors.teal,
-                  scaffoldBackgroundColor: const Color(0xFF0F252D), // Xanh cổ vịt tối chuẩn mẫu
+                  scaffoldBackgroundColor: const Color(0xFF0F252D),
                 ),
                 home: const XoSoHomePage(),
                 debugShowCheckedModeBanner: false,
@@ -98,7 +98,7 @@ jobs:
             @override
             Widget build(BuildContext context) {
               return Scaffold(
-                backgroundColor: const Color(0xFF102830),
+                backgroundColor: const Color(0xFF0F252D),
                 body: SafeArea(
                   child: Column(
                     children: [
@@ -264,7 +264,7 @@ jobs:
                               width: double.infinity,
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF1976D2), // Xanh dương đậm đúng mẫu
+                                  backgroundColor: const Color(0xFF1976D2),
                                   padding: const EdgeInsets.symmetric(vertical: 12),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                                 ),
@@ -382,7 +382,7 @@ jobs:
                         ),
                       ),
 
-                      // Thanh điều hướng đáy (Bottom Navigation)
+                      // Thanh điều hướng đáy
                       Container(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         color: const Color(0xFF0C1D23),
