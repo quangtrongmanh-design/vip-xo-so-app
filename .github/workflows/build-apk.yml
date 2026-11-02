@@ -24,12 +24,17 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Create Android Scaffold & Inject v6.2 Pro Source
+      - name: Initialize Clean Android Project & Inject Source
         run: |
-          # 1. Tạo khung Android v2 chuẩn
-          flutter create . --platforms=android --org com.vip.xoso --project-name vip_xo_so_app
+          # 1. Tạo một ứng dụng Flutter mới hoàn toàn sạch sẽ ở thư mục tạm với tên chuẩn
+          flutter create --org com.vip.xoso --project-name vip_xo_so_app temp_project
           
-          # 2. Tiêm mã nguồn lib/main.dart v6.2 Pro chuẩn chỉnh có đầy đủ resultRows
+          # 2. Mang toàn bộ thư mục android và các file cấu hình chuẩn sang thư mục gốc hiện tại
+          cp -r temp_project/android ./
+          cp temp_project/pubspec.yaml ./
+          rm -rf temp_project
+          
+          # 3. Tiêm mã nguồn v6.2 Pro chuẩn chỉnh có đầy đủ resultRows vào thư mục lib
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -132,15 +137,14 @@ jobs:
           }
           EOF
 
-          # 3. Vá cấu hình gradle.properties để tương thích tuyệt đối
+          # 4. Bật cờ buildconfig tương thích ngược cho Gradle
           echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
-          echo "org.gradle.jvmargs=-Xmx2048M" >> android/gradle.properties
 
       - name: Install Dependencies
         run: flutter pub get
 
       - name: Build APK Debug
-        run: flutter build apk --debug --verbose
+        run: flutter build apk --debug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
