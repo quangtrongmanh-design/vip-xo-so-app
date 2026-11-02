@@ -145,22 +145,8 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon -x compileFlutterBuildDebug
 
-      - name: Upload and Get Direct Download Link
-        run: |
-          # Tự động quét toàn bộ thư mục dự án để tìm file app-debug.apk chính xác nhất
-          APK_PATH=$(find . -name "app-debug.apk" | head -n 1)
-
-          if [ -n "$APK_PATH" ] && [ -f "$APK_PATH" ]; then
-            echo "===================================================="
-            echo "🚀 ĐÃ TÌM THẤY FILE APK TẠI: $APK_PATH"
-            echo "🚀 ĐANG TẢI LÊN HỆ THỐNG CHIA SẺ TRỰC TUYẾN..."
-            echo "===================================================="
-            DOWNLOAD_URL=$(curl --upload-file "$APK_PATH" https://transfer.sh/app-debug.apk)
-            echo "===================================================="
-            echo "🔥 LINK TẢI TRỰC TIẾP CỦA ANH ĐÂY:"
-            echo "$DOWNLOAD_URL"
-            echo "===================================================="
-          else
-            echo "❌ Không tìm thấy file APK trên hệ thống!"
-            exit 1
-          fi
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vip-xo-so-apk-debug
+          path: build/app/outputs/flutter-apk/app-debug.apk
