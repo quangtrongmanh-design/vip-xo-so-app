@@ -24,7 +24,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Project, Name "Dò số" & Pure Gradle Build
+      - name: Setup Project, Name "Dò số" & Inject UI
         run: |
           # 1. Khởi tạo dự án Flutter chuẩn sạch từ đầu
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
@@ -35,18 +35,14 @@ jobs:
             sed -i 's@android:label="vip_xo_so_app"@android:label="Dò số"@g' "$MANIFEST_PATH"
           fi
 
-          # 3. Triệt tiêu hoàn toàn theme màn hình chờ cũ để chống treo logo khi mở app
+          # 3. Triệt tiêu hoàn toàn theme màn hình chờ cũ để chống treo logo
           STYLES_PATH="android/app/src/main/res/values/styles.xml"
           if [ -f "$STYLES_PATH" ]; then
             sed -i '/<item name="android:windowBackground">/d' "$STYLES_PATH"
             sed -i '/<item name="flutterEmbedding">/d' "$STYLES_PATH"
           fi
 
-          # 4. Cấu hình đường dẫn SDK Flutter cho Gradle để bỏ qua lỗi compileFlutterBuild
-          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
-          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
-
-          # 5. Tiêm mã nguồn giao diện chuẩn chỉnh đúng như mẫu vào lib/main.dart
+          # 4. Tiêm mã nguồn giao diện hoàn chỉnh đúng như mẫu vào lib/main.dart
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -430,15 +426,13 @@ jobs:
           }
           EOF
 
-      - name: Get Dependencies & Assets
+      - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build Pure Gradle APK Debug (Bypassing CLI Compiler Error)
+      - name: Build APK via Flutter Assemble & Gradle
         run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew clean
-          ./gradlew assembleDebug --no-daemon
+          # Biên dịch assets và snapshot trực tiếp bằng lệnh flutter chân phương
+          flutter build apk --debug --verbose
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
