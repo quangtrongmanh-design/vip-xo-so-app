@@ -24,18 +24,34 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Clean Project & Inject Source
+      - name: Generate Clean Project, Icons, Name & Inject Source
         run: |
+          # 1. Tạo mới dự án Flutter chuẩn
           flutter create --org com.vip.xoso --project-name vip_xo_so_app temp_app
           cp -r temp_app/* ./
           cp -r temp_app/.* ./ 2>/dev/null || true
           rm -rf temp_app
           
+          # 2. Cấu hình đổi tên ứng dụng thành "Xổ số" trong AndroidManifest.xml
+          MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
+          if [ -f "$MANIFEST_PATH" ]; then
+            sed -i 's/android:label="vip_xo_so_app"/android:label="Xổ số"/g' "$MANIFEST_PATH"
+            sed -i 's/android:label="@string/app_name"/android:label="Xổ số"/g' "$MANIFEST_PATH"
+          fi
+          
+          # Cập nhật tệp strings.xml để đảm bảo tên hiển thị chuẩn xác
+          STRINGS_PATH="android/app/src/main/res/values/strings.xml"
+          if [ -f "$STRINGS_PATH" ]; then
+            sed -i 's/<string name="app_name">.*<\/string>/<string name="app_name">Xổ số<\/string>/g' "$STRINGS_PATH"
+          fi
+
+          # 3. Tạo file mã nguồn lib/main.dart tối ưu, chống đứng hình khi mở app
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
 
           void main() {
+            WidgetsFlutterBinding.ensureInitialized();
             runApp(const MyApp());
           }
 
@@ -45,7 +61,7 @@ jobs:
             @override
             Widget build(BuildContext context) {
               return MaterialApp(
-                title: 'VIP Xổ Số XSMN Pro',
+                title: 'Xổ số',
                 theme: ThemeData(
                   primarySwatch: Colors.amber,
                   scaffoldBackgroundColor: const Color(0xFF121212),
@@ -76,7 +92,7 @@ jobs:
               return Scaffold(
                 appBar: AppBar(
                   title: const Text(
-                    'VIP XỔ SỐ - XSMN v6.2 PRO',
+                    'XỔ SỐ - XSMN v6.2 PRO',
                     style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                   ),
                   backgroundColor: Colors.amber,
