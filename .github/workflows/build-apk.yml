@@ -24,9 +24,9 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Clean Setup, Name "Dò số" & Inject UI Code
+      - name: Setup Project, Name "Dò số" & Pure Gradle Build
         run: |
-          # 1. Khởi tạo dự án Flutter sạch hoàn toàn từ đầu
+          # 1. Khởi tạo dự án Flutter chuẩn sạch từ đầu
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
           
           # 2. Đổi tên ứng dụng thành "Dò số" trong AndroidManifest.xml
@@ -42,7 +42,11 @@ jobs:
             sed -i '/<item name="flutterEmbedding">/d' "$STYLES_PATH"
           fi
 
-          # 4. Tiêm mã nguồn giao diện chuẩn chỉnh đúng như mẫu vào lib/main.dart
+          # 4. Cấu hình đường dẫn SDK Flutter cho Gradle để bỏ qua lỗi compileFlutterBuild
+          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
+          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
+
+          # 5. Tiêm mã nguồn giao diện chuẩn chỉnh đúng như mẫu vào lib/main.dart
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -426,11 +430,15 @@ jobs:
           }
           EOF
 
-      - name: Get Dependencies
+      - name: Get Dependencies & Assets
         run: flutter pub get
 
-      - name: Build APK via Flutter CLI
-        run: flutter build apk --debug
+      - name: Build Pure Gradle APK Debug (Bypassing CLI Compiler Error)
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew clean
+          ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
