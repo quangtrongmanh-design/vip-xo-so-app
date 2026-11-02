@@ -24,34 +24,25 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Clean Project, Name "Dò số" & Inject UI Design
+      - name: Clean Setup, Name "Dò số" & Inject UI Code
         run: |
-          # 1. Tạo mới dự án Flutter chuẩn hoàn toàn trong thư mục tạm
-          flutter create --org com.vip.xoso --project-name vip_xo_so_app temp_project
+          # 1. Khởi tạo dự án Flutter sạch hoàn toàn từ đầu
+          flutter create --org com.vip.xoso --project-name vip_xo_so_app .
           
-          # 2. Xóa các file cũ ở thư mục gốc và chuyển code mới ra
-          rm -rf lib android ios test pubspec.yaml pubspec.lock 2>/dev/null || true
-          cp -r temp_project/* ./
-          cp -r temp_project/.* ./ 2>/dev/null || true
-          rm -rf temp_project
-
-          # 3. Đổi tên ứng dụng thành "Dò số" trong AndroidManifest.xml
+          # 2. Đổi tên ứng dụng thành "Dò số" trong AndroidManifest.xml
           MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
           if [ -f "$MANIFEST_PATH" ]; then
             sed -i 's@android:label="vip_xo_so_app"@android:label="Dò số"@g' "$MANIFEST_PATH"
           fi
 
-          # 4. Triệt tiêu hoàn toàn màn hình Splash cũ để chống treo logo khi khởi động
+          # 3. Triệt tiêu hoàn toàn theme màn hình chờ cũ để chống treo logo khi mở app
           STYLES_PATH="android/app/src/main/res/values/styles.xml"
           if [ -f "$STYLES_PATH" ]; then
             sed -i '/<item name="android:windowBackground">/d' "$STYLES_PATH"
             sed -i '/<item name="flutterEmbedding">/d' "$STYLES_PATH"
           fi
 
-          # 5. Cấu hình buildconfig cho Gradle
-          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
-
-          # 6. Tiêm mã nguồn giao diện chuẩn chỉnh đúng như mẫu vào lib/main.dart
+          # 4. Tiêm mã nguồn giao diện chuẩn chỉnh đúng như mẫu vào lib/main.dart
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -438,13 +429,8 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build Pure Gradle APK Debug
-        run: |
-          flutter precache --android
-          cd android
-          chmod +x gradlew
-          ./gradlew clean
-          ./gradlew assembleDebug --no-daemon
+      - name: Build APK via Flutter CLI
+        run: flutter build apk --debug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
