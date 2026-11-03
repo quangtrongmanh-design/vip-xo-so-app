@@ -24,9 +24,9 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Project, Name "Dò số" & Inject UI Code
+      - name: Setup Project, Name "Dò số" & Full Flutter Build
         run: |
-          # 1. Khởi tạo cấu trúc dự án Flutter chuẩn sạch
+          # 1. Khởi tạo cấu trúc dự án Flutter chuẩn sạch kèm đầy đủ file MainActivity
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
 
           # 2. Ghi đè trực tiếp AndroidManifest.xml chuẩn xác với tên "Dò số"
@@ -61,7 +61,7 @@ jobs:
           </manifest>
           EOF
 
-          # 3. Tiêm mã nguồn giao diện chuẩn chỉnh theo đúng hình mẫu vào lib/main.dart
+          # 3. Tiêm mã nguồn giao diện hoàn chỉnh vào lib/main.dart
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -448,12 +448,8 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build Pure Gradle APK bypassing Flutter Task
-        run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew clean
-          ./gradlew assembleDebug --no-daemon -x compileFlutterBuildDebug
+      - name: Build APK via Flutter CLI Clean
+        run: flutter build apk --debug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
