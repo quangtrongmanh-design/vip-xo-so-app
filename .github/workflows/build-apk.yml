@@ -24,9 +24,9 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Project, Name "Dò số" & Inject UI Code
+      - name: Setup Project, Name "Dò số" & Pure Gradle Build
         run: |
-          # 1. Khởi tạo cấu trúc dự án Flutter chuẩn
+          # 1. Khởi tạo cấu trúc dự án Flutter chuẩn sạch
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
           
           # 2. Đổi tên ứng dụng hiển thị thành "Dò số" trong AndroidManifest.xml
@@ -42,7 +42,11 @@ jobs:
             sed -i '/<item name="flutterEmbedding">/d' "$STYLES_PATH"
           fi
 
-          # 4. Tiêm mã nguồn giao diện chuẩn chỉnh theo đúng hình mẫu vào lib/main.dart
+          # 4. Tạo local.properties để liên kết SDK Flutter chuẩn xác với Gradle
+          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
+          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
+
+          # 5. Tiêm mã nguồn giao diện chuẩn chỉnh theo đúng hình mẫu vào lib/main.dart
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -429,8 +433,16 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build APK Direct Debug
-        run: flutter build apk --debug
+      - name: Build Pure Gradle APK via AssembleDebug
+        run: |
+          # Sử dụng lệnh build non-interactive của Flutter để sinh mã nguồn bytecode Dart trước
+          flutter build apk --debug --local-engine-src-path="" || true
+          
+          # Thực hiện build Gradle thuần túy bằng gradlew
+          cd android
+          chmod +x gradlew
+          ./gradlew clean
+          ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
