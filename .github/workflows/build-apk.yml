@@ -24,9 +24,9 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Project, Name "Dò số" & Full Flutter Build
+      - name: Setup Project, Name "Dò số" & Pure Gradle Build
         run: |
-          # 1. Khởi tạo cấu trúc dự án Flutter chuẩn sạch kèm đầy đủ file MainActivity
+          # 1. Khởi tạo cấu trúc dự án Flutter chuẩn sạch
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
 
           # 2. Ghi đè trực tiếp AndroidManifest.xml chuẩn xác với tên "Dò số"
@@ -448,8 +448,13 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build APK via Flutter CLI Clean
-        run: flutter build apk --debug
+      - name: Build Pure Gradle APK (Bypassing CLI Bug)
+        run: |
+          # Dùng lệnh assembleDebug thuần túy qua Gradle của Android
+          cd android
+          chmod +x gradlew
+          ./gradlew clean
+          ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
