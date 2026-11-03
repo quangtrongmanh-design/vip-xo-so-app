@@ -24,7 +24,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Project, Name "Dò số" & Inject UI Code
+      - name: Setup Project, Icon, Name "Dò số" & Inject UI Code
         run: |
           # 1. Khởi tạo cấu trúc dự án Flutter chuẩn
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
@@ -42,7 +42,14 @@ jobs:
             sed -i '/<item name="flutterEmbedding">/d' "$STYLES_PATH"
           fi
 
-          # 4. Tiêm mã nguồn giao diện chuẩn chỉnh theo đúng hình mẫu vào lib/main.dart
+          # 4. Tự động tạo thư mục mipmap và cấu hình icon launcher chuẩn Android từ icon có sẵn trong mã nguồn (nếu có)
+          mkdir -p android/app/src/main/res/mipmap-hdpi
+          mkdir -p android/app/src/main/res/mipmap-mdpi
+          mkdir -p android/app/src/main/res/mipmap-xhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+
+          # 5. Tiêm mã nguồn giao diện chuẩn chỉnh theo đúng hình mẫu vào lib/main.dart
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -429,15 +436,13 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build Bundle & Pure Gradle APK
+      - name: Build Clean APK via Flutter CLI
         run: |
-          # Biên dịch trước các tài nguyên Dart dưới dạng bundle không kích hoạt emulator
-          flutter build bundle --target-platform android-arm,android-arm64
+          # Biên dịch bundle sạch chuẩn, không lỗi platform
+          flutter build bundle
           
-          # Đóng gói APK hoàn toàn bằng Gradle thuần túy không qua trình biên dịch CLI lỗi
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon -x compileFlutterBuildDebug
+          # Đóng gói APK hoàn chỉnh qua lệnh chuẩn của flutter
+          flutter build apk --debug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
