@@ -24,25 +24,44 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Project, Name "Dò số" & Bypass Compiler Error
+      - name: Setup Project, Name "Dò số" & Inject UI Code
         run: |
           # 1. Khởi tạo cấu trúc dự án Flutter chuẩn sạch
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
-          
-          # 2. Đổi tên ứng dụng hiển thị thành "Dò số" trong AndroidManifest.xml
-          MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
-          if [ -f "$MANIFEST_PATH" ]; then
-            sed -i 's@android:label="vip_xo_so_app"@android:label="Dò số"@g' "$MANIFEST_PATH"
-          fi
 
-          # 3. Xóa bỏ theme màn hình chờ cũ để chống treo logo khi mở app
-          STYLES_PATH="android/app/src/main/res/values/styles.xml"
-          if [ -f "$STYLES_PATH" ]; then
-            sed -i '/<item name="android:windowBackground">/d' "$STYLES_PATH"
-            sed -i '/<item name="flutterEmbedding">/d' "$STYLES_PATH"
-          fi
+          # 2. Ghi đè trực tiếp AndroidManifest.xml chuẩn xác với tên "Dò số"
+          cat << 'EOF' > android/app/src/main/AndroidManifest.xml
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+              package="com.vip.xoso.vip_xo_so_app">
+              <application
+                  android:label="Dò số"
+                  android:name="${applicationName}"
+                  android:icon="@mipmap/ic_launcher">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:launchMode="singleTop"
+                      android:theme="@style/LaunchTheme"
+                      android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+                      android:hardwareAccelerated="true"
+                      android:windowSoftInputMode="adjustResize">
+                      <meta-data
+                        android:name="io.flutter.embedding.android.NormalTheme"
+                        android:resource="@style/NormalTheme"
+                        />
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LAUNCHER"/>
+                      </intent-filter>
+                  </activity>
+                  <meta-data
+                      android:name="flutterEmbedding"
+                      android:value="2" />
+              </application>
+          </manifest>
+          EOF
 
-          # 4. Tiêm mã nguồn giao diện chuẩn chỉnh theo đúng hình mẫu vào lib/main.dart
+          # 3. Tiêm mã nguồn giao diện chuẩn chỉnh theo đúng hình mẫu vào lib/main.dart
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
