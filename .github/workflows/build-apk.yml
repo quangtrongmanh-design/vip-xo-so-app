@@ -24,13 +24,49 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Fresh Project & Strip Flutter Gradle Plugin
+      - name: Setup Clean Pure Android Project
         run: |
-          # 1. Xóa cấu trúc cũ và tạo mới dự án Flutter chuẩn từ gốc
-          rm -rf android ios linux macos windows web lib test pubspec.yaml
+          # 1. Khởi tạo dự án Flutter chuẩn từ gốc
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
 
-          # 2. Ghi đè trực tiếp AndroidManifest.xml chuẩn xác với tên "Dò số"
+          # 2. Xóa sạch file build.gradle cũ của app và viết lại file build.gradle chuẩn thuần túy Android 100% không dính dáng hàm flutter lỗi
+          cat << 'EOF' > android/app/build.gradle
+          plugins {
+              id 'com.android.application'
+          }
+
+          android {
+              namespace "com.vip.xoso.vip_xo_so_app"
+              compileSdkVersion 34
+
+              defaultConfig {
+                  applicationId "com.vip.xoso.vip_xo_so_app"
+                  minSdkVersion 21
+                  targetSdkVersion 34
+                  versionCode 1
+                  versionName "1.0"
+              }
+
+              buildTypes {
+                  release {
+                      minifyEnabled false
+                      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+                  }
+              }
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_1_7
+                  targetCompatibility JavaVersion.VERSION_1_7
+              }
+          }
+
+          dependencies {
+              implementation 'androidx.core:core-ktx:1.12.0'
+              implementation 'androidx.appcompat:appcompat:1.6.1'
+              implementation 'com.google.android.material:material:1.11.0'
+          }
+          EOF
+
+          # 3. Ghi đè AndroidManifest.xml chuẩn xác với tên "Dò số"
           cat << 'EOF' > android/app/src/main/AndroidManifest.xml
           <manifest xmlns:android="http://schemas.android.com/apk/res/android"
               package="com.vip.xoso.vip_xo_so_app">
@@ -61,13 +97,6 @@ jobs:
               </application>
           </manifest>
           EOF
-
-          # 3. Xóa bỏ hoàn toàn dòng apply plugin flutter.gradle trong android/app/build.gradle để chặn đứng task lỗi
-          BUILD_GRADLE="android/app/build.gradle"
-          if [ -f "$BUILD_GRADLE" ]; then
-            sed -i '/flutter.gradle/d' "$BUILD_GRADLE"
-            sed -i '/apply from:.*flutter\.gradle/d' "$BUILD_GRADLE"
-          fi
 
           # 4. Tiêm mã nguồn giao diện hoàn chỉnh vào lib/main.dart
           mkdir -p lib
@@ -453,12 +482,9 @@ jobs:
           }
           EOF
 
-      - name: Get Dependencies
-        run: flutter pub get
-
-      - name: Build Pure Gradle APK Without Flutter Plugin
+      - name: Build Pure Android APK via Gradle
         run: |
-          # Đóng gói APK trực tiếp bằng Gradle thuần túy không gọi flutter compiler
+          # Đóng gói APK trực tiếp bằng Gradle cực kỳ mượt mà
           cd android
           chmod +x gradlew
           ./gradlew clean
@@ -468,4 +494,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: vip-xo-so-apk-debug
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          path: build/app/outputs/apk/debug/app-debug.apk
