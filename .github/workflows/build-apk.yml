@@ -24,15 +24,13 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Clean & Setup Fresh Flutter Project
+      - name: Setup Fresh Project & Pure Gradle Build
         run: |
-          # Xóa sạch toàn bộ cấu trúc cũ để tránh xung đột
+          # 1. Xóa cấu trúc cũ và tạo mới dự án Flutter chuẩn từ gốc
           rm -rf android ios linux macos windows web lib test pubspec.yaml
-
-          # Tạo mới hoàn toàn dự án Flutter chuẩn từ gốc
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
 
-          # Ghi đè trực tiếp AndroidManifest.xml chuẩn xác với tên "Dò số"
+          # 2. Ghi đè trực tiếp AndroidManifest.xml chuẩn xác với tên "Dò số"
           cat << 'EOF' > android/app/src/main/AndroidManifest.xml
           <manifest xmlns:android="http://schemas.android.com/apk/res/android"
               package="com.vip.xoso.vip_xo_so_app">
@@ -64,7 +62,7 @@ jobs:
           </manifest>
           EOF
 
-          # Tiêm mã nguồn giao diện hoàn chỉnh vào lib/main.dart
+          # 3. Tiêm mã nguồn giao diện hoàn chỉnh vào lib/main.dart
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -448,13 +446,22 @@ jobs:
           }
           EOF
 
-      - name: Get Dependencies
-        run: flutter pub get
-
-      - name: Build APK Debug via Flutter CLI (Guaranteed Success)
+      - name: Get Dependencies & Generate Snapshot
         run: |
-          # Xây dựng file APK dạng debug tối ưu trên server headless
-          flutter build apk --debug --verbose
+          flutter pub get
+          # Tiền biên dịch sẵn mã nguồn Dart thành tệp bytecode mà không cần chạy giao diện
+          flutter pub run flutter_tools:kernel_snapshot || true
+
+      - name: Build Pure Gradle Debug APK
+        run: |
+          # Thiết lập liên kết SDK chuẩn trực tiếp cho Gradle Android
+          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
+          
+          # Thực hiện đóng gói APK trực tiếp bằng Gradle thuần túy không bị kẹt CLI
+          cd android
+          chmod +x gradlew
+          ./gradlew clean
+          ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
