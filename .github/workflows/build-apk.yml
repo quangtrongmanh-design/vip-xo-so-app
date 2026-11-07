@@ -24,12 +24,12 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Clean Pure Android Project
+      - name: Setup Pure Android Project & Fix Manifest
         run: |
           # 1. Khởi tạo dự án Flutter chuẩn từ gốc
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
 
-          # 2. Xóa sạch file build.gradle cũ của app và viết lại file build.gradle chuẩn thuần túy Android 100% không dính dáng hàm flutter lỗi
+          # 2. Viết lại file build.gradle chuẩn xác có khai báo namespace đầy đủ
           cat << 'EOF' > android/app/build.gradle
           plugins {
               id 'com.android.application'
@@ -66,10 +66,9 @@ jobs:
           }
           EOF
 
-          # 3. Ghi đè AndroidManifest.xml chuẩn xác với tên "Dò số"
+          # 3. Ghi đè AndroidManifest.xml sạch sẽ (không chứa thuộc tính package trùng lặp)
           cat << 'EOF' > android/app/src/main/AndroidManifest.xml
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-              package="com.vip.xoso.vip_xo_so_app">
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <application
                   android:label="Dò số"
                   android:name="${applicationName}"
@@ -484,7 +483,6 @@ jobs:
 
       - name: Build Pure Android APK via Gradle
         run: |
-          # Đóng gói APK trực tiếp bằng Gradle cực kỳ mượt mà
           cd android
           chmod +x gradlew
           ./gradlew clean
