@@ -24,7 +24,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Project, Name "Dò số" & Bypass Release Task
+      - name: Setup Project, Name "Dò số" & Fix Build Task
         run: |
           # 1. Khởi tạo cấu trúc dự án Flutter chuẩn sạch
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
@@ -61,15 +61,13 @@ jobs:
           </manifest>
           EOF
 
-          # 3. Vô hiệu hóa hoàn toàn task compileFlutterBuild trong Gradle
+          # 3. Chèn cấu hình chuyển hướng thư mục build assets cho Gradle để tránh lỗi task
           BUILD_GRADLE="android/app/build.gradle"
           if [ -f "$BUILD_GRADLE" ]; then
             echo "" >> "$BUILD_GRADLE"
-            echo "tasks.whenTaskAdded { task ->" >> "$BUILD_GRADLE"
-            echo "    if (task.name.contains('compileFlutterBuild')) {" >> "$BUILD_GRADLE"
-            echo "        task.enabled = false" >> "$BUILD_GRADLE"
-            echo "    }" >> "$BUILD_GRADLE"
-            echo "}" >> "$BUILD_GRADLE"
+            echo "project.ext.flutterRoot = '$FLUTTER_ROOT'" >> "$BUILD_GRADLE"
+            echo "com.android.build.gradle.BaseExtension ext = extensions.getByType(com.android.build.gradle.BaseExtension.class)" >> "$BUILD_GRADLE"
+            echo "ext.sourceSets.main.assets.srcDirs += \"\$projectDir/../../build/flutter_assets\"" >> "$BUILD_GRADLE"
           fi
 
           # 4. Tiêm mã nguồn giao diện hoàn chỉnh vào lib/main.dart
@@ -459,12 +457,15 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build Pure Gradle Release APK
+      - name: Build Standalone APK without Compiler Errors
         run: |
-          # Thiết lập liên kết SDK Flutter
+          # Thiết lập liên kết SDK Flutter cho Android Gradle
           echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
           
-          # Thực hiện build APK Release trực tiếp qua Gradle
+          # Biên dịch trước mã nguồn Dart dạng snapshot không cần UI tương tác
+          flutter build bundle --release
+          
+          # Thực hiện đóng gói APK Release thuần túy qua Gradle
           cd android
           chmod +x gradlew
           ./gradlew clean
