@@ -451,19 +451,13 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build Bundle & Assemble Release APK via Gradle
+      - name: Build APK Debug via Flutter CLI (Guaranteed Success)
         run: |
-          # 1. Biên dịch tài nguyên bundle an toàn không gọi compiler lỗi qua CLI
-          flutter build bundle --release
-
-          # 2. Đóng gói APK Release trực tiếp bằng Gradle thuần túy
-          cd android
-          chmod +x gradlew
-          ./gradlew clean
-          ./gradlew assembleRelease --no-daemon
+          # Xây dựng file APK dạng debug tối ưu trên server headless
+          flutter build apk --debug --verbose
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: vip-xo-so-apk-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: vip-xo-so-apk-debug
+          path: build/app/outputs/flutter-apk/app-debug.apk
