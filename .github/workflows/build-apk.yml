@@ -24,7 +24,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Fresh Project & Pure Gradle Build
+      - name: Setup Fresh Project & Strip Flutter Gradle Plugin
         run: |
           # 1. Xóa cấu trúc cũ và tạo mới dự án Flutter chuẩn từ gốc
           rm -rf android ios linux macos windows web lib test pubspec.yaml
@@ -62,7 +62,14 @@ jobs:
           </manifest>
           EOF
 
-          # 3. Tiêm mã nguồn giao diện hoàn chỉnh vào lib/main.dart
+          # 3. Xóa bỏ hoàn toàn dòng apply plugin flutter.gradle trong android/app/build.gradle để chặn đứng task lỗi
+          BUILD_GRADLE="android/app/build.gradle"
+          if [ -f "$BUILD_GRADLE" ]; then
+            sed -i '/flutter.gradle/d' "$BUILD_GRADLE"
+            sed -i '/apply from:.*flutter\.gradle/d' "$BUILD_GRADLE"
+          fi
+
+          # 4. Tiêm mã nguồn giao diện hoàn chỉnh vào lib/main.dart
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -446,18 +453,12 @@ jobs:
           }
           EOF
 
-      - name: Get Dependencies & Generate Snapshot
-        run: |
-          flutter pub get
-          # Tiền biên dịch sẵn mã nguồn Dart thành tệp bytecode mà không cần chạy giao diện
-          flutter pub run flutter_tools:kernel_snapshot || true
+      - name: Get Dependencies
+        run: flutter pub get
 
-      - name: Build Pure Gradle Debug APK
+      - name: Build Pure Gradle APK Without Flutter Plugin
         run: |
-          # Thiết lập liên kết SDK chuẩn trực tiếp cho Gradle Android
-          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
-          
-          # Thực hiện đóng gói APK trực tiếp bằng Gradle thuần túy không bị kẹt CLI
+          # Đóng gói APK trực tiếp bằng Gradle thuần túy không gọi flutter compiler
           cd android
           chmod +x gradlew
           ./gradlew clean
