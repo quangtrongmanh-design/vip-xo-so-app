@@ -459,19 +459,16 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build Pure Gradle APK with Task Bypassed
+      - name: Build Signed Release APK
         run: |
-          # Thiết lập liên kết SDK Flutter cho Android Gradle
+          # Thiết lập liên kết SDK Flutter
           echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
           
-          # Build trực tiếp bằng Gradle mà không bị task compileFlutterBuild quấy rầy
-          cd android
-          chmod +x gradlew
-          ./gradlew clean
-          ./gradlew assembleDebug --no-daemon
+          # Build APK dạng release để tương thích 100% với mọi dòng máy Android
+          flutter build apk --release
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: vip-xo-so-apk-debug
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
