@@ -24,64 +24,44 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Project & Clean Manifest
+      - name: Setup Project & Inject Full UI Code
         run: |
-          # 1. Khởi tạo dự án Flutter chuẩn từ gốc
+          # 1. Khởi tạo cấu trúc dự án Flutter chuẩn 100% từ gốc (tự sinh đủ MainActivity và cấu hình)
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
 
-          # 2. Viết lại file build.gradle chuẩn namespace
-          cat << 'EOF' > android/app/build.gradle
-          plugins {
-              id 'com.android.application'
-          }
-
-          android {
-              namespace "com.vip.xoso.vip_xo_so_app"
-              compileSdkVersion 34
-
-              defaultConfig {
-                  applicationId "com.vip.xoso.vip_xo_so_app"
-                  minSdkVersion 21
-                  targetSdkVersion 34
-                  versionCode 1
-                  versionName "1.0"
-              }
-
-              buildTypes {
-                  release {
-                      minifyEnabled false
-                      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-                  }
-              }
-          }
-
-          dependencies {
-              implementation 'androidx.core:core-ktx:1.12.0'
-              implementation 'androidx.appcompat:appcompat:1.6.1'
-              implementation 'com.google.android.material:material:1.11.0'
-          }
-          EOF
-
-          # 3. Ghi đè tệp AndroidManifest.xml siêu sạch, loại bỏ hoàn toàn mọi biến rác gây xung đột
+          # 2. Ghi đè trực tiếp AndroidManifest.xml chuẩn xác với tên "Dò số"
           cat << 'EOF' > android/app/src/main/AndroidManifest.xml
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+              package="com.vip.xoso.vip_xo_so_app">
               <application
                   android:label="Dò số"
+                  android:name="${applicationName}"
                   android:icon="@mipmap/ic_launcher">
                   <activity
                       android:name=".MainActivity"
                       android:exported="true"
-                      android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+                      android:launchMode="singleTop"
+                      android:theme="@style/LaunchTheme"
+                      android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+                      android:hardwareAccelerated="true"
+                      android:windowSoftInputMode="adjustResize">
+                      <meta-data
+                        android:name="io.flutter.embedding.android.NormalTheme"
+                        android:resource="@style/NormalTheme"
+                        />
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN"/>
                           <category android:name="android.intent.category.LAUNCHER"/>
                       </intent-filter>
                   </activity>
+                  <meta-data
+                      android:name="flutterEmbedding"
+                      android:value="2" />
               </application>
           </manifest>
           EOF
 
-          # 4. Tiêm mã nguồn giao diện hoàn chỉnh vào lib/main.dart
+          # 3. Tiêm mã nguồn giao diện hoàn chỉnh vào lib/main.dart
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -465,8 +445,15 @@ jobs:
           }
           EOF
 
-      - name: Build Pure Android APK via Gradle
+      - name: Get Dependencies
+        run: flutter pub get
+
+      - name: Build APK via Gradle Direct Assemble (No Headless Compiler Lock)
         run: |
+          # Thiết lập liên kết SDK chuẩn cho Gradle
+          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
+          
+          # Thực hiện đóng gói APK trực tiếp qua Gradle với cấu trúc nguyên bản
           cd android
           chmod +x gradlew
           ./gradlew clean
@@ -476,4 +463,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: vip-xo-so-apk-debug
-          path: build/app/outputs/apk/debug/app-debug.apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
