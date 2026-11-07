@@ -24,7 +24,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Project, Name "Dò số" & Bypass Flutter Task in Gradle
+      - name: Setup Project, Name "Dò số" & Inject Full UI Code
         run: |
           # 1. Khởi tạo cấu trúc dự án Flutter chuẩn sạch
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
@@ -61,18 +61,7 @@ jobs:
           </manifest>
           EOF
 
-          # 3. Vô hiệu hóa hoàn toàn task compileFlutterBuildDebug bị lỗi trong build.gradle của app
-          BUILD_GRADLE="android/app/build.gradle"
-          if [ -f "$BUILD_GRADLE" ]; then
-            echo "" >> "$BUILD_GRADLE"
-            echo "tasks.whenTaskAdded { task ->" >> "$BUILD_GRADLE"
-            echo "    if (task.name.contains('compileFlutterBuild')) {" >> "$BUILD_GRADLE"
-            echo "        task.enabled = false" >> "$BUILD_GRADLE"
-            echo "    }" >> "$BUILD_GRADLE"
-            echo "}" >> "$BUILD_GRADLE"
-          fi
-
-          # 4. Tiêm mã nguồn giao diện hoàn chỉnh vào lib/main.dart
+          # 3. Tiêm mã nguồn giao diện hoàn chỉnh vào lib/main.dart
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -461,14 +450,11 @@ jobs:
 
       - name: Build Signed Release APK
         run: |
-          # Thiết lập liên kết SDK Flutter
-          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
-          
           # Build APK dạng release để tương thích 100% với mọi dòng máy Android
           flutter build apk --release
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: vip-xo-so-apk-debug
+          name: vip-xo-so-apk-release
           path: build/app/outputs/flutter-apk/app-release.apk
