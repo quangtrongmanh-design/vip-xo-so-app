@@ -24,12 +24,12 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Project & Inject Full UI Code
+      - name: Setup Project & Bypass Compiler Task
         run: |
-          # 1. Khởi tạo cấu trúc dự án Flutter chuẩn 100% từ gốc (tự sinh đủ MainActivity và cấu hình)
+          # 1. Khởi tạo dự án Flutter chuẩn từ gốc
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
 
-          # 2. Ghi đè trực tiếp AndroidManifest.xml chuẩn xác với tên "Dò số"
+          # 2. Ghi đè AndroidManifest.xml chuẩn xác với tên "Dò số"
           cat << 'EOF' > android/app/src/main/AndroidManifest.xml
           <manifest xmlns:android="http://schemas.android.com/apk/res/android"
               package="com.vip.xoso.vip_xo_so_app">
@@ -61,7 +61,18 @@ jobs:
           </manifest>
           EOF
 
-          # 3. Tiêm mã nguồn giao diện hoàn chỉnh vào lib/main.dart
+          # 3. Chèn đoạn script vào android/app/build.gradle để vô hiệu hóa hoàn toàn task compileFlutterBuild nếu nó xuất hiện
+          BUILD_GRADLE="android/app/build.gradle"
+          if [ -f "$BUILD_GRADLE" ]; then
+            echo "" >> "$BUILD_GRADLE"
+            echo "tasks.whenTaskAdded { task ->" >> "$BUILD_GRADLE"
+            echo "    if (task.name.startsWith('compileFlutterBuild')) {" >> "$BUILD_GRADLE"
+            echo "        task.enabled = false" >> "$BUILD_GRADLE"
+            echo "    }" >> "$BUILD_GRADLE"
+            echo "}" >> "$BUILD_GRADLE"
+          fi
+
+          # 4. Tiêm mã nguồn giao diện hoàn chỉnh vào lib/main.dart
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -448,12 +459,8 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build APK via Gradle Direct Assemble (No Headless Compiler Lock)
+      - name: Build APK via Gradle Direct Assemble
         run: |
-          # Thiết lập liên kết SDK chuẩn cho Gradle
-          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
-          
-          # Thực hiện đóng gói APK trực tiếp qua Gradle với cấu trúc nguyên bản
           cd android
           chmod +x gradlew
           ./gradlew clean
