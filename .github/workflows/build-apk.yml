@@ -24,7 +24,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Project, Name "Dò số" & Inject Full UI Code
+      - name: Setup Project, Name "Dò số" & Bypass Release Task
         run: |
           # 1. Khởi tạo cấu trúc dự án Flutter chuẩn sạch
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
@@ -61,7 +61,18 @@ jobs:
           </manifest>
           EOF
 
-          # 3. Tiêm mã nguồn giao diện hoàn chỉnh vào lib/main.dart
+          # 3. Vô hiệu hóa hoàn toàn task compileFlutterBuild trong Gradle
+          BUILD_GRADLE="android/app/build.gradle"
+          if [ -f "$BUILD_GRADLE" ]; then
+            echo "" >> "$BUILD_GRADLE"
+            echo "tasks.whenTaskAdded { task ->" >> "$BUILD_GRADLE"
+            echo "    if (task.name.contains('compileFlutterBuild')) {" >> "$BUILD_GRADLE"
+            echo "        task.enabled = false" >> "$BUILD_GRADLE"
+            echo "    }" >> "$BUILD_GRADLE"
+            echo "}" >> "$BUILD_GRADLE"
+          fi
+
+          # 4. Tiêm mã nguồn giao diện hoàn chỉnh vào lib/main.dart
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -448,10 +459,16 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build Release APK via Flutter CLI
+      - name: Build Pure Gradle Release APK
         run: |
-          # Biên dịch trực tiếp APK release thông qua lệnh chuẩn của Flutter
-          flutter build apk --release
+          # Thiết lập liên kết SDK Flutter
+          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
+          
+          # Thực hiện build APK Release trực tiếp qua Gradle
+          cd android
+          chmod +x gradlew
+          ./gradlew clean
+          ./gradlew assembleRelease --no-daemon
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
