@@ -24,12 +24,12 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Pure Android Project & Fix Manifest
+      - name: Setup Project & Clean Manifest
         run: |
           # 1. Khởi tạo dự án Flutter chuẩn từ gốc
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
 
-          # 2. Viết lại file build.gradle chuẩn xác có khai báo namespace đầy đủ
+          # 2. Viết lại file build.gradle chuẩn namespace
           cat << 'EOF' > android/app/build.gradle
           plugins {
               id 'com.android.application'
@@ -53,10 +53,6 @@ jobs:
                       proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
                   }
               }
-              compileOptions {
-                  sourceCompatibility JavaVersion.VERSION_1_7
-                  targetCompatibility JavaVersion.VERSION_1_7
-              }
           }
 
           dependencies {
@@ -66,33 +62,21 @@ jobs:
           }
           EOF
 
-          # 3. Ghi đè AndroidManifest.xml sạch sẽ (không chứa thuộc tính package trùng lặp)
+          # 3. Ghi đè tệp AndroidManifest.xml siêu sạch, loại bỏ hoàn toàn mọi biến rác gây xung đột
           cat << 'EOF' > android/app/src/main/AndroidManifest.xml
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <application
                   android:label="Dò số"
-                  android:name="${applicationName}"
                   android:icon="@mipmap/ic_launcher">
                   <activity
                       android:name=".MainActivity"
                       android:exported="true"
-                      android:launchMode="singleTop"
-                      android:theme="@style/LaunchTheme"
-                      android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
-                      android:hardwareAccelerated="true"
-                      android:windowSoftInputMode="adjustResize">
-                      <meta-data
-                        android:name="io.flutter.embedding.android.NormalTheme"
-                        android:resource="@style/NormalTheme"
-                        />
+                      android:theme="@style/Theme.AppCompat.Light.NoActionBar">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN"/>
                           <category android:name="android.intent.category.LAUNCHER"/>
                       </intent-filter>
                   </activity>
-                  <meta-data
-                      android:name="flutterEmbedding"
-                      android:value="2" />
               </application>
           </manifest>
           EOF
