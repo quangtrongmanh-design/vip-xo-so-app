@@ -24,7 +24,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Project, Name "Dò số" & Fix Build Task
+      - name: Setup Project, Name "Dò số" & Strip Flutter Gradle Plugin
         run: |
           # 1. Khởi tạo cấu trúc dự án Flutter chuẩn sạch
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
@@ -61,13 +61,11 @@ jobs:
           </manifest>
           EOF
 
-          # 3. Chèn cấu hình chuyển hướng thư mục build assets cho Gradle để tránh lỗi task
+          # 3. Loại bỏ dòng apply plugin flutter.gradle gây lỗi trong android/app/build.gradle
           BUILD_GRADLE="android/app/build.gradle"
           if [ -f "$BUILD_GRADLE" ]; then
-            echo "" >> "$BUILD_GRADLE"
-            echo "project.ext.flutterRoot = '$FLUTTER_ROOT'" >> "$BUILD_GRADLE"
-            echo "com.android.build.gradle.BaseExtension ext = extensions.getByType(com.android.build.gradle.BaseExtension.class)" >> "$BUILD_GRADLE"
-            echo "ext.sourceSets.main.assets.srcDirs += \"\$projectDir/../../build/flutter_assets\"" >> "$BUILD_GRADLE"
+            sed -i '/flutter.gradle/d' "$BUILD_GRADLE"
+            sed -i '/apply from: "\$flutterRoot\/packages\/flutter_tools\/gradle\/flutter.gradle"/d' "$BUILD_GRADLE"
           fi
 
           # 4. Tiêm mã nguồn giao diện hoàn chỉnh vào lib/main.dart
@@ -457,15 +455,12 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build Standalone APK without Compiler Errors
+      - name: Build Pure Android APK via Gradle
         run: |
-          # Thiết lập liên kết SDK Flutter cho Android Gradle
-          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
-          
-          # Biên dịch trước mã nguồn Dart dạng snapshot không cần UI tương tác
+          # Biên dịch tài nguyên Dart bundle trước
           flutter build bundle --release
           
-          # Thực hiện đóng gói APK Release thuần túy qua Gradle
+          # Đóng gói APK trực tiếp qua Gradle hoàn toàn độc lập
           cd android
           chmod +x gradlew
           ./gradlew clean
