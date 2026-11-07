@@ -26,10 +26,10 @@ jobs:
 
       - name: Clean & Setup Fresh Flutter Project
         run: |
-          # Xóa sạch toàn bộ cấu trúc cũ nếu có để tránh xung đột
+          # Xóa sạch toàn bộ cấu trúc cũ để tránh xung đột
           rm -rf android ios linux macos windows web lib test pubspec.yaml
 
-          # Tạo mới hoàn toàn dự án Flutter chuẩn 100% từ gốc
+          # Tạo mới hoàn toàn dự án Flutter chuẩn từ gốc
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
 
           # Ghi đè trực tiếp AndroidManifest.xml chuẩn xác với tên "Dò số"
@@ -451,10 +451,16 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build APK Release via Flutter CLI
+      - name: Build Bundle & Assemble Release APK via Gradle
         run: |
-          # Build APK release chuẩn xác từ bộ khung mới hoàn toàn
-          flutter build apk --release
+          # 1. Biên dịch tài nguyên bundle an toàn không gọi compiler lỗi qua CLI
+          flutter build bundle --release
+
+          # 2. Đóng gói APK Release trực tiếp bằng Gradle thuần túy
+          cd android
+          chmod +x gradlew
+          ./gradlew clean
+          ./gradlew assembleRelease --no-daemon
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
