@@ -448,9 +448,9 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build Signed Release APK
+      - name: Build Release APK via Flutter CLI
         run: |
-          # Build APK dạng release để tương thích 100% với mọi dòng máy Android
+          # Biên dịch trực tiếp APK release thông qua lệnh chuẩn của Flutter
           flutter build apk --release
 
       - name: Upload APK Artifact
