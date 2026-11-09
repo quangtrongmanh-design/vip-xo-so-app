@@ -24,7 +24,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Project & Standard Build APK
+      - name: Setup Project & Build APK
         run: |
           # 1. Khởi tạo cấu trúc dự án Flutter chuẩn 100% từ gốc
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
@@ -63,7 +63,7 @@ jobs:
           </manifest>
           EOF
 
-          # 3. Tiêm mã nguồn giao diện hoàn chỉnh vào lib/main.dart
+          # 3. Tiêm mã nguồn giao diện hoàn chỉnh với cú pháp Dart chuẩn xác tuyệt đối vào lib/main.dart
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -452,7 +452,6 @@ jobs:
 
       - name: Build APK Debug using Flutter CLI
         run: |
-          # Xây dựng file APK Debug chuẩn mực tích hợp đầy đủ bytecode Dart
           flutter build apk --debug
 
       - name: Upload APK Artifact
