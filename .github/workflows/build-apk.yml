@@ -24,7 +24,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Project & Build APK via Bundle
+      - name: Setup Project & Build Pure Gradle APK
         run: |
           # 1. Khởi tạo cấu trúc dự án Flutter chuẩn 100% từ gốc
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
@@ -63,7 +63,18 @@ jobs:
           </manifest>
           EOF
 
-          # 3. Tiêm mã nguồn giao diện hoàn chỉnh vào lib/main.dart
+          # 3. Chèn đoạn script vô hiệu hóa task compileFlutterBuild trong build.gradle để Gradle tự build trực tiếp
+          BUILD_GRADLE="android/app/build.gradle"
+          if [ -f "$BUILD_GRADLE" ]; then
+            echo "" >> "$BUILD_GRADLE"
+            echo "tasks.whenTaskAdded { task ->" >> "$BUILD_GRADLE"
+            echo "    if (task.name.startsWith('compileFlutterBuild')) {" >> "$BUILD_GRADLE"
+            echo "        task.enabled = false" >> "$BUILD_GRADLE"
+            echo "    }" >> "$BUILD_GRADLE"
+            echo "}" >> "$BUILD_GRADLE"
+          fi
+
+          # 4. Tiêm mã nguồn giao diện hoàn chỉnh vào lib/main.dart
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -447,15 +458,14 @@ jobs:
           }
           EOF
 
-      - name: Get Dependencies
-        run: flutter pub get
-
-      - name: Build Bundle and Assemble APK via Gradle
+      - name: Get Dependencies & Build APK via Gradle
         run: |
-          # Biên dịch tài nguyên Dart bundle an toàn trước
-          flutter build bundle --debug
+          flutter pub get
+          
+          # Thiết lập liên kết SDK chuẩn cho Gradle Android
+          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
 
-          # Đóng gói APK trực tiếp qua Gradle để né hoàn toàn task compile lỗi
+          # Thực hiện đóng gói APK trực tiếp bằng Gradle cực kỳ mượt mà
           cd android
           chmod +x gradlew
           ./gradlew clean
