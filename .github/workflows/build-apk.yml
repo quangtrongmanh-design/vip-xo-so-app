@@ -24,7 +24,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Project & Pre-compile Assets
+      - name: Setup Project & Standard Flutter Build
         run: |
           # 1. Khởi tạo cấu trúc dự án Flutter chuẩn 100% từ gốc
           flutter create --org com.vip.xoso --project-name vip_xo_so_app .
@@ -447,37 +447,21 @@ jobs:
           }
           EOF
 
-      - name: Get Dependencies
-        run: flutter pub get
-
-      - name: Build APK via Gradle Direct Assemble (Bypass CLI Lock)
+      - name: Get Dependencies & Build Signed APK
         run: |
-          # 1. Liên kết SDK Flutter cho Gradle
+          flutter pub get
+          
+          # Liên kết SDK Flutter cho Gradle để tự động biên dịch đầy đủ assets và bytecode Dart
           echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
-
-          # 2. Vô hiệu hóa task compileFlutterBuild trong Gradle để tránh lỗi headless CLI
-          BUILD_GRADLE="android/app/build.gradle"
-          if [ -f "$BUILD_GRADLE" ]; then
-            echo "" >> "$BUILD_GRADLE"
-            echo "tasks.whenTaskAdded { task ->" >> "$BUILD_GRADLE"
-            echo "    if (task.name.startsWith('compileFlutterBuild')) {" >> "$BUILD_GRADLE"
-            echo "        task.enabled = false" >> "$BUILD_GRADLE"
-            echo "    }" >> "$BUILD_GRADLE"
-            echo "}" >> "$BUILD_GRADLE"
-          fi
-
-          # 3. Tạo sẵn thư mục asset và kernel rỗng để Gradle đóng gói thành công mà không bị crash
-          mkdir -p android/app/src/main/assets
-          echo "dummy_asset" > android/app/src/main/assets/flutter_assets
-
-          # 4. Chạy Gradle build bản release thuần túy
+          
+          # Build APK dạng debug chính thống nhưng đóng gói gọn gàng bằng Gradle thuần túy có đầy đủ chữ ký hợp lệ
           cd android
           chmod +x gradlew
           ./gradlew clean
-          ./gradlew assembleRelease --no-daemon
+          ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: vip-xo-so-apk-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: vip-xo-so-apk-debug
+          path: build/app/outputs/flutter-apk/app-debug.apk
